@@ -19,7 +19,7 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-10 Real inference on AMD Token Factory | Code ready; waiting for the team key | Felipe |
 | B-11 Review time measurement | Not started | Daniel |
 | B-12 UI completion | Not started | Edgar |
-| B-13 Public HTTPS deployment | Overlay and runbook done; no VM yet | Jean |
+| B-13 Public HTTPS deployment | Free Cloudflare tunnel verified (15/15 checks); always-on VM pending student credits | Jean |
 | B-14 Demo video, slides and submission | Not started | Edgar and Jean |
 
 Mock evaluation results only prove that the pieces fit together, because the mock replays each fixture's recorded response. Never present them as model accuracy.
@@ -48,7 +48,10 @@ Respect the production Content-Security-Policy (`docs/deploy.md`): no CDN assets
 
 ## B-13: Public HTTPS deployment
 
-Owner: Jean. Create one small Linux VM, follow `docs/deploy.md`, and verify the public URL from an incognito window. Record the URL and checks in `docs/deploy.md`.
+Owner: Jean. No AMD credits or paid hosting are needed: inference runs on Token Factory.
+
+- Done: Cloudflare quick tunnel (`compose.tunnel.yaml`) gives a free public HTTPS URL from any machine running Docker; `scripts/check_deploy.py` passed 15/15 against it on 2026-10-12 (mock provider). Use it for testing, recording, and live demos.
+- Remaining: for an always-on judging URL, apply for student cloud credits (GitHub Student Developer Pack offers) and follow option B in `docs/deploy.md`. If no free VM is available, submit with the tunnel and state the hours it will be up.
 
 ## B-14: Demo video, slides and submission
 

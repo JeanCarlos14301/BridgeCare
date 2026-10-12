@@ -1,13 +1,43 @@
-# Public CPU deployment (HTTPS)
+# Public deployment (HTTPS)
 
-One small Linux VM runs the whole demo with Docker Compose. Caddy terminates HTTPS and is the only service with published ports. Inference runs remotely on AMD (Token Factory), so the VM needs no GPU.
+Inference runs remotely on AMD (Token Factory), so the web host needs no GPU and no AMD credits. Two free options use the same images:
+
+| Option | Cost | Use it for |
+| --- | --- | --- |
+| A. Cloudflare quick tunnel from any machine running Docker | Free, no account | Testing, recording the video, live demos while the machine is on |
+| B. Small Linux VM with Caddy (student cloud credits) | Free with credits | The judging window: a stable URL that is always on |
+
+Both force `APP_ENV=production` (secure cookies, mandatory `SESSION_SECRET`) and `ALLOW_UPLOADS=false`, publish no API or web ports, and refuse to start without `SESSION_SECRET` and `REVIEWER_PASSWORD`. nginx sends the security headers (HSTS, CSP, nosniff, Referrer-Policy) on every path.
+
+## Option A: Cloudflare quick tunnel
+
+```text
+Browser ──HTTPS──> Cloudflare edge <──outbound tunnel── cloudflared ──> web ──> api
+```
+
+1. In `.env`, set a strong `REVIEWER_PASSWORD` and `SESSION_SECRET` (generation commands are in `.env.example`).
+2. Start the stack and read the URL:
+
+   ```bash
+   docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
+   docker compose -f compose.yaml -f compose.tunnel.yaml logs cloudflared | grep -o "https://[a-z0-9-]*\.trycloudflare\.com"
+   ```
+
+3. Verify from the same machine: `uv run --project apps/api python scripts/check_deploy.py <url>`.
+4. Stop: `docker compose -f compose.yaml -f compose.tunnel.yaml down`.
+
+Limits: the URL is random and changes on every restart, the machine must stay on and awake, and quick tunnels have no uptime guarantee. The tunnel only connects outward, so no router or firewall changes are needed.
+
+## Option B: Linux VM with Caddy
+
+One small Linux VM runs the whole demo with Docker Compose. Caddy terminates HTTPS and is the only service with published ports.
 
 ```text
 Browser ──HTTPS 443──> Caddy ──> web (nginx, UI + /api proxy) ──> api (FastAPI, SQLite volume)
                                                                     └──HTTPS──> AMD Token Factory
 ```
 
-Nothing here has been deployed yet. Record the real URL, date and checks in this file once it is.
+Free hosts: GitHub Student Developer Pack offers (for example Azure for Students or DigitalOcean credits). Check the current offer and whether a card is required before creating anything.
 
 ## 1. Host
 

@@ -1,0 +1,23 @@
+# Free public HTTPS URL through a Cloudflare quick tunnel. No account, no open ports.
+#   docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
+#   docker compose -f compose.yaml -f compose.tunnel.yaml logs cloudflared | grep trycloudflare.com
+# The URL is random and changes every time the tunnel restarts; the machine must stay on.
+# Quick tunnels are for testing and demos and have no uptime guarantee. See docs/deploy.md.
+services:
+  api:
+    ports: !reset []
+    environment:
+      APP_ENV: production
+      ALLOW_UPLOADS: "false"
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET (32+ characters)}
+      REVIEWER_PASSWORD: ${REVIEWER_PASSWORD:?Set REVIEWER_PASSWORD (12+ characters)}
+
+  web:
+    ports: !reset []
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    command: ["tunnel", "--no-autoupdate", "--url", "http://web:80"]
+    depends_on:
+      - web
+    restart: unless-stopped
