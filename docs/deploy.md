@@ -9,6 +9,15 @@ Inference runs remotely on AMD (Token Factory), so the web host needs no GPU and
 
 Both force `APP_ENV=production` (secure cookies, mandatory `SESSION_SECRET`) and `ALLOW_UPLOADS=false`, publish no API or web ports, and refuse to start without `SESSION_SECRET` and `REVIEWER_PASSWORD`. nginx sends the security headers (HSTS, CSP, nosniff, Referrer-Policy) on every path.
 
+## Deployment record
+
+| Date (UTC-5) | Where | What was verified |
+| --- | --- | --- |
+| 2026-10-12 | Cloudflare quick tunnel from a team laptop | `check_deploy.py` 15/15, mock provider |
+| 2026-10-12 | Azure for Students VM `Standard_B2ats_v2` (2 vCPU, AMD EPYC, 1 GiB) in North Central US, `https://bridgecare-team944.northcentralus.cloudapp.azure.com` | `check_deploy.py` 15/15 with `provider_mode=openai_compatible`; one real case through the public URL: processed by Token Factory (`self-dploy/DeepSeek-V4-Flash`, prompt `extraction-v2`, model 26.9 s), patient view 409 before approval and 200 after |
+
+The Azure subscription only allows these regions: `spaincentral`, `chilecentral`, `germanywestcentral`, `northcentralus`, `italynorth`. The VM was created from Azure Cloud Shell with `az vm create` (image `Canonical:ubuntu-24_04-lts:server:latest`, Standard SSD), then `az vm open-port --port 80,443`.
+
 ## Option A: Cloudflare quick tunnel
 
 ```text
