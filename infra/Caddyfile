@@ -1,0 +1,18 @@
+# Public HTTPS entry point. Caddy obtains and renews the certificate for PUBLIC_HOST
+# automatically (Let's Encrypt for a public DNS name, a local CA for "localhost").
+
+{$PUBLIC_HOST} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+		-Server
+	}
+
+	# The web container serves the UI and proxies /api/* to the API on the internal network.
+	reverse_proxy web:80
+}
