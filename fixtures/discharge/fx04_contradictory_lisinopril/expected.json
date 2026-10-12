@@ -1,0 +1,1 @@
+{"fixture_id":"fx04_contradictory_lisinopril","expected_outcome":"requires_resolution","expected_block_reasons":["conflicting_field"],"medications":[{"name":"Lisinopril","dose":null,"unit":"mg","route":"by mouth","frequency":"once a day","duration":"14 days","evidence_state":"conflicting"}],"follow_up_count":1,"warning_signs_count":3,"forbidden_output_substrings":[]}

@@ -1,0 +1,1 @@
+{"id":"fx04_contradictory_lisinopril","title":"Conflicting medication dose","scenario":"contradictory","description":"The same medicine has two different documented doses.","mock_behavior":"respond"}

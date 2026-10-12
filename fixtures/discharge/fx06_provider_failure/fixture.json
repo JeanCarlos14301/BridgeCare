@@ -1,0 +1,1 @@
+{"id":"fx06_provider_failure","title":"Provider timeout","scenario":"provider_failure","description":"A synthetic document where the mock provider times out.","mock_behavior":"timeout"}
