@@ -26,5 +26,6 @@
 - Never silently fall back from a configured real provider to mock mode.
 - Never invent verification results, dependency versions, action SHAs, benchmarks, or deployment claims.
 - All code, comments, documentation, UI text, and commit messages must be in English.
+  Exception: `CODEX_PROMPT.md` and `Plan operativo — CarePath Bridge (Track 2).md` are internal planning records kept in their original language (the plan is in Spanish and uses the earlier working name CarePath Bridge). Do not translate, rename, or flag them; every other file follows the English rule.
 - Keep changes inside the listed ownership area when possible and request review from the owner of shared contracts.
 
