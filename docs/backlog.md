@@ -34,6 +34,8 @@ The patient medication table is rendered deterministically from validated fields
 
 ## B-05: Session isolation and reviewer access
 
+Status: session layer done on branch `feat/b-05-sessions` (`POST /session`, `GET /session`, `POST /session/login`, `POST /session/logout`; dependencies `require_session`, `require_reviewer`, `ensure_case_owner`, `require_uploads_enabled`). Remaining: B-06 case endpoints must use these dependencies, and Edgar's UI needs a reviewer login screen.
+
 Public visitors may select fixtures only within an isolated session and cannot upload. Reviewer login uses a server-side password and an HttpOnly session cookie. Check both session and case authorization on every endpoint; knowledge of a UUID is never sufficient.
 
 `POST /cases/upload` is private-only, limited to 5 MB and 10 pages, and disabled whenever `ALLOW_UPLOADS=false`.

@@ -57,6 +57,22 @@ class Settings(BaseSettings):
                 )
         return self
 
+    @model_validator(mode="after")
+    def validate_sessions(self) -> "Settings":
+        session_secret = self.session_secret.get_secret_value()
+        reviewer_password = self.reviewer_password.get_secret_value()
+        if not self.is_development and not session_secret:
+            raise ValueError("SESSION_SECRET is required when APP_ENV is not development")
+        if session_secret and len(session_secret) < 32:
+            raise ValueError("SESSION_SECRET must be at least 32 characters")
+        if reviewer_password and len(reviewer_password) < 12:
+            raise ValueError("REVIEWER_PASSWORD must be at least 12 characters")
+        return self
+
+    @property
+    def is_development(self) -> bool:
+        return self.app_env == "development"
+
 
 @lru_cache
 def get_settings() -> Settings:

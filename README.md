@@ -58,8 +58,8 @@ Copy `.env.example` to `.env`; never commit `.env`.
 | `EVOLUS_ENABLED` | `false` | Disabled integration flag; no API behavior exists |
 | `EVOLUS_API_KEY` | empty | Reserved backend-only value |
 | `EVOLUS_APPLICATION_ID` | empty | Reserved backend-only value |
-| `REVIEWER_PASSWORD` | empty | Reserved for Phase B reviewer authentication |
-| `SESSION_SECRET` | empty | Reserved for Phase B server-side sessions |
+| `REVIEWER_PASSWORD` | empty | Reviewer login password (12+ characters). Empty disables reviewer login. |
+| `SESSION_SECRET` | empty | HMAC key for session tokens (32+ characters). Required unless `APP_ENV=development`; rotating it ends all sessions. |
 
 When `LLM_PROVIDER=openai_compatible`, `LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL` are mandatory. Missing values stop startup; the application never falls back to mock mode.
 

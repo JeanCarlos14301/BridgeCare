@@ -8,8 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.example import router as example_router
 from app.api.health import router as health_router
+from app.api.session import router as session_router
 from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging, metadata_logging_middleware
+from app.core.sessions import LoginThrottle, SessionStore, session_key
 from app.core.settings import get_settings
 from app.db.migrations import apply_migrations
 from app.db.session import build_engine, build_session_factory
@@ -26,6 +28,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     app.state.db_sessions = build_session_factory(engine)
     app.state.provider = build_provider(settings)
+    app.state.session_store = SessionStore(session_key(settings))
+    app.state.login_throttle = LoginThrottle()
     yield
     engine.dispose()
 
@@ -49,6 +53,7 @@ def create_app() -> FastAPI:
     application.middleware("http")(metadata_logging_middleware)
     application.include_router(health_router)
     application.include_router(example_router)
+    application.include_router(session_router)
     install_error_handlers(application)
     return application
 
