@@ -166,6 +166,10 @@ With the mock provider the results only prove that the pieces fit together; they
 
 ## Public deployment
 
+**Live demo:** <https://bridgecare-team944.northcentralus.cloudapp.azure.com> (Azure VM, real inference on AMD Token Factory). The reviewer password is provided in the submission form, not in this repository.
+
+Merging to `main` does **not** update the live demo. Jean deploys tested `main` to the VM with `scripts/deploy-vm.sh`; see "Release process" in `docs/deploy.md`.
+
 Both options run in production mode (secure cookies, uploads off, no exposed API port) and need `REVIEWER_PASSWORD` and `SESSION_SECRET` in `.env`.
 
 - **Cloudflare quick tunnel** (free, temporary URL, the machine must stay on): `docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build`, then read the `trycloudflare.com` URL from `docker compose -f compose.yaml -f compose.tunnel.yaml logs cloudflared`.

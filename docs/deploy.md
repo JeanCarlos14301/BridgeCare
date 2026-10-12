@@ -118,9 +118,44 @@ Then open the URL in an incognito window, pick a fixture, log in as reviewer, ap
 
 Verified locally with `PUBLIC_HOST=localhost` and `check_deploy.py https://localhost --insecure` (Caddy's local CA): 15/15 checks passed, with the mock-provider warning.
 
+## Release process
+
+The VM never updates itself. Merging to `main` does not change the live demo until Jean deploys, so a broken merge cannot reach judges unnoticed.
+
+1. Team merges to `main` at 12:30 and 18:30 through reviewed PRs with green CI.
+2. After the 18:30 merge (or when a fix is urgent), Jean runs `main` locally with real inference and checks the fixtures.
+3. On the VM: `cd ~/BridgeCare && bash scripts/deploy-vm.sh`. It refuses to run with local edits, fast-forwards to `origin/main`, rebuilds, waits for `/api/ready` through Caddy, appends the commit to `.deploy-history`, and prints the rollback command.
+4. From your own machine: `uv run --project apps/api python scripts/check_deploy.py https://<PUBLIC_HOST>` must pass 15/15.
+5. Freeze: no deploys while recording the video or during the judging window unless fixing an outage.
+
+Rollback: run the printed `git checkout <previous> && docker compose ... up -d --build`. The next `deploy-vm.sh` returns to `main` by itself.
+
+### One-time: read-only deploy key on the VM
+
+So `git pull` works without personal tokens:
+
+```bash
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/bridgecare_deploy -C "bridgecare-vm deploy key"
+cat ~/.ssh/bridgecare_deploy.pub
+```
+
+In GitHub: repository **Settings → Deploy keys → Add deploy key**, paste the public key, leave **Allow write access unchecked**. Then on the VM:
+
+```bash
+cat >> ~/.ssh/config <<'EOF'
+Host github.com
+  IdentityFile ~/.ssh/bridgecare_deploy
+  IdentitiesOnly yes
+EOF
+cd ~/BridgeCare && git remote set-url origin git@github.com:JeanCarlos14301/BridgeCare.git
+git fetch origin && echo "deploy key works"
+```
+
+Delete the deploy key in GitHub after the event.
+
 ## 6. Operate
 
-- Update: `git pull && docker compose -f compose.yaml -f compose.prod.yaml up -d --build`.
+- Update: `bash scripts/deploy-vm.sh` on the VM (see "Release process" below).
 - Logs (metadata only): `docker compose -f compose.yaml -f compose.prod.yaml logs -f api`.
 - Backup before risky changes: `docker compose -f compose.yaml -f compose.prod.yaml exec api python -c "import sqlite3; sqlite3.connect('/data/app.db').backup(sqlite3.connect('/data/backup.db'))"`.
 - After judging: rotate `SESSION_SECRET` (ends every session) and `REVIEWER_PASSWORD`, then restart.
