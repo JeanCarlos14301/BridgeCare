@@ -7,6 +7,7 @@
 - CI runs gitleaks. `gitleaks-action` is free for personal-account repositories but requires a `GITLEAKS_LICENSE` secret if the repository moves to a GitHub organization.
 - The OpenAI-compatible client has a bounded timeout and at most one retry.
 - CORS origins are explicit and uploads are disabled.
+- The AMD Token Factory shared endpoints forbid sensitive personal, health, or financial data and retain prompts and outputs for about 2 days. Only synthetic fixtures are ever sent to the model; uploads stay disabled in every environment that uses the shared endpoints.
 - Sessions are server-side. The `bridgecare_session` cookie is `HttpOnly`, `SameSite=Strict`, and `Secure` outside development; only an HMAC of the token (keyed by `SESSION_SECRET`) is stored. Visitor sessions last 4 hours, reviewer sessions 12 hours.
 - Reviewer login compares the password in constant time, issues a new token on success (no session fixation), and is disabled when `REVIEWER_PASSWORD` is empty. After 10 failed attempts in 5 minutes, all logins return 429 until the window passes; this cap is process-wide because the API is a single replica.
 - Every case endpoint must call `ensure_case_owner`. A case from another session answers 404, so a UUID never grants access or reveals existence.

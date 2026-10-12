@@ -10,6 +10,9 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.1 /uv /uvx /bin/
 COPY apps/api/pyproject.toml apps/api/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY apps/api/app ./app
+# Synthetic demo fixtures only; never place real records in this folder.
+COPY fixtures ./fixtures
+ENV FIXTURES_DIR=/app/fixtures/discharge
 EXPOSE 8000
 CMD ["uv", "run", "--no-sync", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
 
