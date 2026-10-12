@@ -135,14 +135,30 @@ Rules:
 
 The backend computes the gate for each revision. Approval is possible only when `blocking_reasons` is empty, or when the only reasons are `conflicting_field` and the review carries a resolution note.
 
-| reason | Raised when |
+There are two kinds of reasons.
+
+**Processing failures** end the run with no revision. The case becomes `failed` and `failure_reason` holds the code. The case can be processed again.
+
+| failure_reason | Raised when |
 | --- | --- |
-| `schema_invalid` | Model output does not match section 2 |
-| `citation_not_found` | A quote is not present on the cited page |
-| `conflicting_field` | Any item has `evidence_state: conflicting` |
-| `insufficient_text` | Extracted document text is below the minimum length |
-| `provider_error` | Timeout, invalid JSON, or provider failure (case becomes `failed`) |
-| `truncated_output` | The provider reports truncation |
+| `schema_invalid` | Output is not JSON, or does not match section 2 (unknown keys included, e.g. `"status"`) |
+| `provider_error` | Timeout, transport error, or upstream failure |
+| `truncated_output` | The provider reports truncation (`finish_reason: length`) |
+| `insufficient_text` | Document text is under 200 characters after whitespace normalization |
+| `fixture_unavailable` | The fixture cannot be loaded |
+| `interrupted` | The API restarted while the case was processing |
+
+**Gate reasons** are attached to a revision (`revision.gate.blocking_reasons`, each with `code`, `field`, `message`). The case stays in `needs_review`.
+
+| code | Raised when | Approval |
+| --- | --- | --- |
+| `citation_not_found` | A quote is not on the cited page, or a non-missing item has no citation | Blocked |
+| `medication_not_verbatim` | A medication value does not appear, on token boundaries, inside a verified quote of that item (catches altered doses such as `50` for `500`) | Blocked |
+| `conflicting_field` | An item has `evidence_state: conflicting` | Allowed only with a resolution note of at least 10 characters |
+
+`gate.approvable` is true when there are no reasons or only `conflicting_field`; `gate.requires_resolution_note` is true in the second case. A reviewer can also resolve a conflict by editing the draft, which creates a new revision and recomputes the gate.
+
+For `expected.json`, `expected_block_reasons` uses gate codes, and `expected_outcome: failed` cases are compared by `failure_reason`.
 
 ## 4. Cases, revisions and review
 

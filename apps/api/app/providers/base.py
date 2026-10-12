@@ -11,6 +11,22 @@ class GenerationResult:
     provider_mode: ProviderMode
 
 
+@dataclass(frozen=True)
+class ExtractionRequest:
+    system_prompt: str
+    user_prompt: str
+    # Used only by the mock provider to replay a fixture's recorded response.
+    fixture_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ExtractionResult:
+    raw_text: str
+    truncated: bool
+    model: str
+    provider_mode: ProviderMode
+
+
 class LLMProvider(ABC):
     mode: ProviderMode
 
@@ -22,3 +38,10 @@ class LLMProvider(ABC):
     async def generate(self, text: str) -> GenerationResult:
         """Generate a short generic response."""
 
+    @abstractmethod
+    async def extract(self, request: ExtractionRequest) -> ExtractionResult:
+        """Return the raw JSON text for a structured extraction.
+
+        Raises ProviderError on timeout, transport, or upstream failure. The caller validates
+        the returned text; providers never interpret it.
+        """

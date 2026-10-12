@@ -53,6 +53,8 @@ Copy `.env.example` to `.env`; never commit `.env`.
 | `LLM_API_KEY` | empty | Backend-only provider credential |
 | `LLM_MODEL` | empty | Provider model identifier |
 | `LLM_TIMEOUT_SECONDS` | `60` | Bounded HTTP timeout (1–300 seconds) |
+| `LLM_REASONING_EFFORT` | empty | Optional `reasoning_effort` for reasoning models (`none`, `minimal`, `low`, `medium`, `high`); empty omits it |
+| `LLM_MAX_OUTPUT_TOKENS` | `4096` | `max_tokens` for extraction; thinking tokens count toward it |
 | `DATABASE_URL` | `sqlite:////data/app.db` | SQLAlchemy SQLite URL |
 | `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated browser origins |
 | `EVOLUS_ENABLED` | `false` | Disabled integration flag; no API behavior exists |

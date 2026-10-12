@@ -1,6 +1,40 @@
-# AMD ROCm vLLM runbook
+# AMD inference runbook
 
-This is a manual runbook, not an automated deployment. AMD credits and hardware access are currently unapproved, and no AMD execution is claimed.
+No AMD execution is claimed until it has been run and recorded.
+
+## Primary path: AMD Token Factory (shared endpoints)
+
+For ACT III the organizers provide a team API key from `notebooks.amd.com/tokenfactory`. Token Factory serves OpenAI-compatible chat completions on AMD GPUs (AMD Radeon Cloud). No VM is needed.
+
+1. **Every team member** signs in at `notebooks.amd.com/tokenfactory` with their AMD AI Developer Program account and clicks "Redeem API Key". The key is only revealed after all members have redeemed.
+2. Put the key **only** in the server's `.env` (never in Git, chat, screenshots, or the browser):
+
+   ```env
+   LLM_PROVIDER=openai_compatible
+   LLM_BASE_URL=https://developer.amd.com.cn/radeon/api
+   LLM_API_KEY=<team key, format rc-...>
+   LLM_MODEL=<an id returned by GET /v1/models>
+   LLM_REASONING_EFFORT=
+   ```
+
+   `LLM_BASE_URL` has no `/v1`; the adapter appends `/v1/models` and `/v1/chat/completions`.
+3. Run the explicit smoke test (section "Verification"), then `GET /ready`. Ready is false if the configured model is not in the live catalog.
+
+Facts from the Token Factory guide that the code depends on:
+
+- Every chat model accepts `response_format: {"type": "json_object"}`; we send it on every extraction.
+- Reasoning models spend thinking tokens from `max_tokens` and can return empty content with `finish_reason: length`, which BridgeCare reports as `truncated_output`. Use a non-thinking model, or set `LLM_REASONING_EFFORT` to `none` or `low`, and raise `LLM_MAX_OUTPUT_TOKENS` if needed. Valid values differ per model (for example GLM rejects `xhigh`; Qwen3.8-27B rejects `high`).
+- A single system message at index 0 is accepted by every model; the extraction request uses exactly that shape.
+- Limits are **per team key**: about 30 requests per minute, 8 concurrent, plus a daily spend cap (`GET /v1/usage`). A 429 with a short `Retry-After` is retried once; a per-minute limit fails fast with a clear error. Coordinate experiments across the team.
+- The catalog changes; pick models from `GET /v1/models` at the time of use.
+- Terms: trial and development only, no SLA; prompts and outputs are retained for about 2 days; **do not send sensitive personal, health, or financial data**. BridgeCare sends only synthetic fixtures. Uploads stay disabled.
+- Dedicated endpoints (paid with credits) and Evolus's "own vLLM endpoint on AMD Developer Cloud" requirement are separate; the shared endpoint does not satisfy the Evolus track.
+
+Evidence for the submission: the model id returned in each revision (`revision.model`), the `X-Request-ID` and latency shown in the UI, and the `GET /v1/usage?include_recent=true` record of those requests. Never show the key.
+
+## Alternative path: self-hosted vLLM on ROCm
+
+Use only if a dedicated endpoint or Developer Cloud VM is required.
 
 ## Image and host prerequisites
 
