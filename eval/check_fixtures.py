@@ -52,6 +52,19 @@ def citations_in(value: Any) -> list[dict[str, Any]]:
     return found
 
 
+def evidence_states_in(value: Any) -> list[Any]:
+    found: list[Any] = []
+    if isinstance(value, dict):
+        if "evidence_state" in value:
+            found.append(value["evidence_state"])
+        for child in value.values():
+            found.extend(evidence_states_in(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.extend(evidence_states_in(child))
+    return found
+
+
 def check_fixture(folder: Path, errors: list[str]) -> None:
     prefix = folder.relative_to(ROOT).as_posix()
     required = ["fixture.json", "document.json", "expected.json"]
@@ -70,6 +83,8 @@ def check_fixture(folder: Path, errors: list[str]) -> None:
         errors.append(f"{prefix}: fixture id must match its folder and {ID_PATTERN.pattern}")
     if fixture.get("scenario") not in SCENARIOS:
         errors.append(f"{prefix}: invalid scenario")
+    if not isinstance(fixture.get("title"), str) or not isinstance(fixture.get("description"), str):
+        errors.append(f"{prefix}: title and description must be strings")
     behavior = fixture.get("mock_behavior")
     if behavior not in MOCK_BEHAVIORS:
         errors.append(f"{prefix}: invalid mock_behavior")
@@ -104,6 +119,9 @@ def check_fixture(folder: Path, errors: list[str]) -> None:
     block_reasons = expected.get("expected_block_reasons")
     if not isinstance(block_reasons, list) or any(reason not in BLOCK_REASONS for reason in block_reasons):
         errors.append(f"{prefix}: invalid expected_block_reasons")
+    for field in ("follow_up_count", "warning_signs_count"):
+        if not isinstance(expected.get(field), int) or expected[field] < 0:
+            errors.append(f"{prefix}: {field} must be a non-negative integer")
     document_text = normalize("\n".join(texts))
     medications = expected.get("medications")
     if not isinstance(medications, list):
@@ -123,6 +141,12 @@ def check_fixture(folder: Path, errors: list[str]) -> None:
     forbidden = expected.get("forbidden_output_substrings")
     if not isinstance(forbidden, list) or not all(isinstance(item, str) for item in forbidden):
         errors.append(f"{prefix}: forbidden_output_substrings must be a list of strings")
+    if fixture.get("scenario") == "provider_failure" and expected.get("expected_outcome") != "failed":
+        errors.append(f"{prefix}: provider_failure fixtures must have failed expected_outcome")
+    if fixture.get("scenario") == "contradictory" and "conflicting_field" not in block_reasons:
+        errors.append(f"{prefix}: contradictory fixtures must block on conflicting_field")
+    if fixture.get("scenario") == "prompt_injection" and not forbidden:
+        errors.append(f"{prefix}: prompt_injection fixtures need forbidden output substrings")
     if behavior == "respond" and mock_path.is_file():
         mock = load_json(mock_path, errors)
         if not isinstance(mock, dict):
@@ -135,9 +159,9 @@ def check_fixture(folder: Path, errors: list[str]) -> None:
                 errors.append(f"{prefix}: citation has invalid document_id, page, or quote")
             elif normalize(quote) not in page_text.get(page, ""):
                 errors.append(f"{prefix}: citation quote is not verbatim on page {page}")
-        for item in mock.get("medications", []):
-            if isinstance(item, dict) and item.get("evidence_state") not in EVIDENCE_STATES:
-                errors.append(f"{prefix}: mock medication has invalid evidence_state")
+        for state in evidence_states_in(mock):
+            if state not in EVIDENCE_STATES:
+                errors.append(f"{prefix}: mock response has invalid evidence_state")
 
 
 def main() -> int:
