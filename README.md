@@ -15,6 +15,8 @@ Open <http://localhost:5173>. The API is also available directly at <http://loca
 
 Stop the stack with `docker compose down`. The SQLite database remains in the `api-data` volume. Use `docker compose down --volumes` only when you intentionally want to delete local data.
 
+For a public HTTPS deployment on a CPU VM (Caddy + `compose.prod.yaml`), follow `docs/deploy.md`.
+
 ## Local start without Docker
 
 Prerequisites: Python 3.12 or 3.13, [uv](https://docs.astral.sh/uv/), Node.js 22.12 or newer, and npm.

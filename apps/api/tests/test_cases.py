@@ -114,6 +114,19 @@ def test_other_sessions_get_404(client: TestClient) -> None:
     assert client.get("/cases").json() == []
 
 
+def test_login_after_creating_a_case_keeps_the_case(client: TestClient) -> None:
+    client.post("/session")
+    visitor_token = client.cookies[SESSION_COOKIE]
+    case = _process(client, "fx01_clear")
+    _login(client)
+    reloaded = client.get(f"/cases/{case['case_id']}")
+    assert reloaded.status_code == 200
+    assert _review(client, reloaded.json()).status_code == 200
+    # The old visitor token is revoked and cannot reach the case.
+    client.cookies.set(SESSION_COOKIE, visitor_token)
+    assert client.get(f"/cases/{case['case_id']}").status_code == 401
+
+
 def test_visitors_cannot_review_or_edit(client: TestClient) -> None:
     client.post("/session")
     case = _process(client, "fx01_clear")
