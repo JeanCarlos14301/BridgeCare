@@ -16,10 +16,10 @@ def _database_url(tmp_path: Path) -> str:
     return f"sqlite:///{(tmp_path / 'app.db').as_posix()}"
 
 
-def test_baseline_migration_is_recorded(tmp_path: Path) -> None:
+def test_bundled_migrations_are_recorded(tmp_path: Path) -> None:
     engine = build_engine(_database_url(tmp_path))
-    assert apply_migrations(engine) == ["0001_initial"]
-    assert applied_versions(engine) == {"0001_initial"}
+    assert apply_migrations(engine) == ["0001_initial", "0002_sessions"]
+    assert applied_versions(engine) == {"0001_initial", "0002_sessions"}
     engine.dispose()
 
 
