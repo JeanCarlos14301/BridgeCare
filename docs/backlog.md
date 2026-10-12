@@ -4,6 +4,8 @@ Phase B is intentionally not implemented. Build one complete vertical slice befo
 
 ## B-00: Apply migrations and verify SQLite persistence
 
+Status: done on branch `feat/b-00-migrations` (startup runner, `schema_migrations` ledger, session dependency, `/ready` database check; persistence verified across `docker compose down`/`up`).
+
 Owner: Jean. Blocks B-01. The Phase A engine is lazy: nothing applies `apps/api/app/db/migrations/0001_initial.sql`, `session_scope()` is unused, and the `api-data` volume stays empty after startup. Add a startup migration runner that records applied versions, wire the session dependency into routes, and add a test that writes a row, restarts the stack with `docker compose restart api`, and reads it back from `/data/app.db`.
 
 ## B-01: Case state machine and revision persistence
