@@ -17,6 +17,7 @@
 /apps/api/app/providers/ @IngeNelsonG
 /apps/api/app/prompts/ @IngeNelsonG
 /eval/ @IngeNelsonG
+/fixtures/ @IngeNelsonG
 
 # Edgar: frontend and UX
 /apps/web/ @Wissen01720
