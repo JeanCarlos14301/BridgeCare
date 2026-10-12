@@ -19,7 +19,7 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-10 Real inference on AMD Token Factory | Code ready; waiting for the team key | Felipe |
 | B-11 Review time measurement | Not started | Daniel |
 | B-12 UI completion | Not started | Edgar |
-| B-13 Public HTTPS deployment | Free Cloudflare tunnel verified (15/15 checks); always-on VM pending student credits | Jean |
+| B-13 Public HTTPS deployment | Done: Azure VM live with real AMD inference (15/15 checks); Cloudflare tunnel as backup | Jean |
 | B-14 Demo video, slides and submission | Not started | Edgar and Jean |
 
 Mock evaluation results only prove that the pieces fit together, because the mock replays each fixture's recorded response. Never present them as model accuracy.
