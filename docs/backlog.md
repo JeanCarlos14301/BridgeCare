@@ -2,6 +2,10 @@
 
 Phase B is intentionally not implemented. Build one complete vertical slice before expanding. Each section below is a reviewable issue with acceptance criteria.
 
+## B-00: Apply migrations and verify SQLite persistence
+
+Owner: Jean. Blocks B-01. The Phase A engine is lazy: nothing applies `apps/api/app/db/migrations/0001_initial.sql`, `session_scope()` is unused, and the `api-data` volume stays empty after startup. Add a startup migration runner that records applied versions, wire the session dependency into routes, and add a test that writes a row, restarts the stack with `docker compose restart api`, and reads it back from `/data/app.db`.
+
 ## B-01: Case state machine and revision persistence
 
 Implement server-owned transitions: `received -> processing -> needs_review -> approved | rejected`, plus `processing -> failed`. The server must never accept `approved` from a model or request body. Editing or reprocessing an approved case creates a revision, returns the case to `needs_review`, and invalidates the former output.

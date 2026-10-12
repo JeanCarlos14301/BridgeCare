@@ -37,6 +37,8 @@ npm run dev
 
 The Vite server exposes the UI at <http://localhost:5173> and proxies browser calls from `/api/*` to the local API. The frontend never needs a Docker-only hostname or a secret.
 
+The native API reads exported environment variables and an optional `apps/api/.env`. It does **not** read the root `.env`, which Docker Compose uses. With no configuration it runs the mock provider and stores SQLite at `apps/api/app.db`. Do not reuse the root `DATABASE_URL=sqlite:////data/app.db` for native runs: `/data` exists only inside the API container.
+
 ## Configuration
 
 Copy `.env.example` to `.env`; never commit `.env`.

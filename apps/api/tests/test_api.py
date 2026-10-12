@@ -27,3 +27,11 @@ def test_example_rejects_empty_input(client: TestClient) -> None:
     response = client.post("/example", json={"text": ""})
     assert response.status_code == 422
 
+
+def test_responses_carry_server_generated_request_id(client: TestClient) -> None:
+    response = client.get("/health", headers={"X-Request-ID": "client-supplied"})
+    request_id = response.headers["X-Request-ID"]
+    assert request_id != "client-supplied"
+    assert len(request_id) == 32
+    assert request_id != client.get("/health").headers["X-Request-ID"]
+
