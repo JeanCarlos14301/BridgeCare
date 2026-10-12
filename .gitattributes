@@ -1,0 +1,10 @@
+* text=auto
+
+# Shell wrappers and container files must keep LF endings on every checkout,
+# including Windows clones with core.autocrlf=true.
+scripts/doctor text eol=lf
+scripts/smoke text eol=lf
+scripts/smoke-amd text eol=lf
+scripts/export-contract text eol=lf
+*.sh text eol=lf
+*.Dockerfile text eol=lf

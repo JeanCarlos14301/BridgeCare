@@ -13,7 +13,7 @@ class OpenAICompatibleProvider(LLMProvider):
 
     def __init__(self, settings: Settings) -> None:
         self.base_url = settings.llm_base_url.rstrip("/")
-        self.api_key = settings.llm_api_key
+        self.api_key = settings.llm_api_key.get_secret_value()
         self.model = settings.llm_model
         self.timeout = settings.llm_timeout_seconds
 
