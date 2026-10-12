@@ -1,0 +1,39 @@
+[project]
+name = "carepath-bridge-api"
+version = "0.1.0"
+description = "Generic Phase A API scaffold for carepath-bridge"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi[standard]",
+  "httpx",
+  "pydantic-settings",
+  "sqlalchemy",
+]
+
+[dependency-groups]
+dev = [
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "ruff",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --disable-warnings"
+

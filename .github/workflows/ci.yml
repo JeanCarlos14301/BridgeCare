@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: "0.12.1"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22.19.0"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install API dependencies
+        run: uv sync --project apps/api --frozen --dev
+
+      - name: Install web dependencies
+        run: npm ci --prefix ./apps/web
+
+      - name: Lint API and scripts
+        run: uv run --project apps/api ruff check apps/api scripts
+
+      - name: Type-check API
+        run: uv run --project apps/api mypy apps/api/app
+
+      - name: Test API and contract drift
+        run: uv run --project apps/api pytest apps/api/tests
+
+      - name: Lint web
+        run: npm --prefix ./apps/web run lint
+
+      - name: Type-check web
+        run: npm --prefix ./apps/web run typecheck
+
+      - name: Test web
+        run: npm --prefix ./apps/web test -- --run
+
+      - name: Build web
+        run: npm --prefix ./apps/web run build
+
+      - name: Check exported contract
+        run: uv run --project apps/api python scripts/export_contract.py --check
+
+      - name: Check generated TypeScript contract
+        shell: bash
+        run: |
+          npm --prefix ./apps/web run contract:generate
+          git diff --exit-code -- packages/contracts/openapi.d.ts
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

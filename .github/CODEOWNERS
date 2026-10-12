@@ -1,0 +1,9 @@
+# Only verified GitHub handles belong in this file.
+/infra/ @JeanCarlos14301
+/.github/ @JeanCarlos14301
+/scripts/ @JeanCarlos14301
+/apps/api/app/core/ @JeanCarlos14301
+/apps/api/app/db/ @JeanCarlos14301
+
+# TODO: add Daniel, Felipe, and Edgar after their exact GitHub handles are confirmed.
+

@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.venv
+.uv-cache
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/node_modules
+**/dist
+*.db
+*.sqlite3
+CODEX_PROMPT.md
