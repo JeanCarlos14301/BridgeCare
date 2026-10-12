@@ -37,7 +37,13 @@ Browser ──HTTPS 443──> Caddy ──> web (nginx, UI + /api proxy) ──
                                                                     └──HTTPS──> AMD Token Factory
 ```
 
-Free hosts: GitHub Student Developer Pack offers (for example Azure for Students or DigitalOcean credits). Check the current offer and whether a card is required before creating anything.
+The team uses **Azure for Students** (US$100 credit, no card). Create the VM in the Azure portal:
+
+1. Virtual machines → Create → Azure virtual machine.
+2. Image **Ubuntu Server 24.04 LTS**; size **B1s** or **B2s** (smallest that is listed for your subscription and region); authentication **SSH public key** (keep the private key on your machine only).
+3. Inbound ports: allow **SSH (22)**, **HTTP (80)** and **HTTPS (443)**. After creation, restrict port 22 to your own IP in the network security group.
+4. After creation, set a DNS name label on the public IP (Configuration) to get `<label>.<region>.cloudapp.azure.com`, or use `<ip-with-dashes>.sslip.io` as `PUBLIC_HOST`.
+5. In Cost Management, create a budget alert well under the credit. Stop **and** delete the VM after judging; deallocated disks and public IPs can still consume credit.
 
 ## 1. Host
 
