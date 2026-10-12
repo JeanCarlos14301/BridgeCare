@@ -1,4 +1,4 @@
-# carepath-bridge
+# BridgeCare
 
 Phase A developer scaffold for a future discharge-instructions review assistant. This repository currently contains generic infrastructure and a non-medical provider example only. It does **not** diagnose, treat, calculate doses, approve output, or implement the Phase B workflow.
 

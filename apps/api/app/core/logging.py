@@ -15,7 +15,7 @@ async def metadata_logging_middleware(
 ) -> Response:
     started = time.perf_counter()
     response = await call_next(request)
-    logging.getLogger("carepath.request").info(
+    logging.getLogger("bridgecare.request").info(
         json.dumps(
             {
                 "event": "http_request",

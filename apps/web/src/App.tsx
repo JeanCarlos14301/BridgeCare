@@ -42,7 +42,7 @@ export default function App() {
   return (
     <main>
       <section className="status-card" aria-labelledby="status-title">
-        <p className="eyebrow">carepath-bridge</p>
+        <p className="eyebrow">BridgeCare</p>
         <div className="title-row">
           <h1 id="status-title">Development status</h1>
           {providerMode === "mock" && <span className="badge">MOCK</span>}

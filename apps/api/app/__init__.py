@@ -1,2 +1,2 @@
-"""carepath-bridge API package."""
+"""BridgeCare API package."""
 

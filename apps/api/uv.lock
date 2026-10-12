@@ -91,7 +91,7 @@ wheels = [
 ]
 
 [[package]]
-name = "carepath-bridge-api"
+name = "bridgecare-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

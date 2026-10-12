@@ -27,7 +27,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging()
     application = FastAPI(
-        title="carepath-bridge API",
+        title="BridgeCare API",
         version="0.1.0",
         description="Generic Phase A scaffold. Health-specific behavior is not implemented.",
         lifespan=lifespan,

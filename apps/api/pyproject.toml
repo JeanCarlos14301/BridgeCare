@@ -1,7 +1,7 @@
 [project]
-name = "carepath-bridge-api"
+name = "bridgecare-api"
 version = "0.1.0"
-description = "Generic Phase A API scaffold for carepath-bridge"
+description = "Generic Phase A API scaffold for BridgeCare"
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "fastapi[standard]",
