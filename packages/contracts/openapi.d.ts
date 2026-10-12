@@ -4,6 +4,126 @@
  */
 
 export interface paths {
+    "/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Cases */
+        get: operations["list_cases_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cases/from-fixture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Case From Fixture */
+        post: operations["create_case_from_fixture_cases_from_fixture_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Case */
+        get: operations["read_case_cases__case_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Case */
+        delete: operations["delete_case_cases__case_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cases/{case_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Draft */
+        patch: operations["update_draft_cases__case_id__draft_patch"];
+        trace?: never;
+    };
+    "/cases/{case_id}/patient-view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Patient View */
+        get: operations["read_patient_view_cases__case_id__patient_view_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cases/{case_id}/process": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Process Case */
+        post: operations["process_case_cases__case_id__process_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cases/{case_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Case */
+        post: operations["review_case_cases__case_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/example": {
         parameters: {
             query?: never;
@@ -15,6 +135,23 @@ export interface paths {
         put?: never;
         /** Example */
         post: operations["example_example_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fixtures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Fixtures */
+        get: operations["list_fixtures_fixtures_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -114,6 +251,86 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BlockingReason */
+        BlockingReason: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "schema_invalid" | "citation_not_found" | "medication_not_verbatim" | "conflicting_field" | "insufficient_text" | "provider_error" | "truncated_output";
+            /** Field */
+            field?: string | null;
+            /** Message */
+            message: string;
+        };
+        /** CaseSummary */
+        CaseSummary: {
+            /** Case Id */
+            case_id: string;
+            /** Fixture Id */
+            fixture_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "received" | "processing" | "needs_review" | "approved" | "rejected" | "failed";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** CaseView */
+        CaseView: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Failure Reason */
+            failure_reason: ("schema_invalid" | "provider_error" | "truncated_output" | "insufficient_text" | "fixture_unavailable" | "interrupted") | null;
+            /** Fixture Id */
+            fixture_id: string;
+            review: components["schemas"]["ReviewRecord"] | null;
+            revision: components["schemas"]["RevisionView"] | null;
+            /** Source Documents */
+            source_documents: components["schemas"]["SourceDocument"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "received" | "processing" | "needs_review" | "approved" | "rejected" | "failed";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** Citation */
+        Citation: {
+            /** Document Id */
+            document_id: string;
+            /** Page */
+            page: number;
+            /** Quote */
+            quote: string;
+        };
+        /** CreateCaseRequest */
+        CreateCaseRequest: {
+            /** Fixture Id */
+            fixture_id: string;
+        };
+        /** DraftUpdateRequest */
+        DraftUpdateRequest: {
+            /** Content Hash */
+            content_hash: string;
+            extracted_fields: components["schemas"]["ExtractedFields"];
+            patient_draft: components["schemas"]["PatientDraft"];
+            /** Revision Id */
+            revision_id: string;
+        };
         /** ExampleRequest */
         ExampleRequest: {
             /** Text */
@@ -128,6 +345,54 @@ export interface components {
             provider_mode: "mock" | "openai_compatible";
             /** Text */
             text: string;
+        };
+        /** ExtractedFields */
+        ExtractedFields: {
+            activity: components["schemas"]["TextItem"];
+            diet: components["schemas"]["TextItem"];
+            /** Follow Up */
+            follow_up: components["schemas"]["FollowUp"][];
+            /** Medications */
+            medications: components["schemas"]["Medication"][];
+            /** Warning Signs */
+            warning_signs: components["schemas"]["TextItem"][];
+        };
+        /** FixtureSummary */
+        FixtureSummary: {
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /**
+             * Scenario
+             * @enum {string}
+             */
+            scenario: "clear" | "missing_fields" | "contradictory" | "prompt_injection" | "provider_failure";
+            /** Title */
+            title: string;
+        };
+        /** FollowUp */
+        FollowUp: {
+            /** Citations */
+            citations?: components["schemas"]["Citation"][];
+            /**
+             * Evidence State
+             * @enum {string}
+             */
+            evidence_state: "supported" | "missing" | "ambiguous" | "conflicting";
+            /** Instruction */
+            instruction?: string | null;
+            /** Timeframe */
+            timeframe?: string | null;
+        };
+        /** Gate */
+        Gate: {
+            /** Approvable */
+            approvable: boolean;
+            /** Blocking Reasons */
+            blocking_reasons: components["schemas"]["BlockingReason"][];
+            /** Requires Resolution Note */
+            requires_resolution_note: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -153,6 +418,88 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Medication */
+        Medication: {
+            /** Citations */
+            citations?: components["schemas"]["Citation"][];
+            /** Dose */
+            dose?: string | null;
+            /** Duration */
+            duration?: string | null;
+            /**
+             * Evidence State
+             * @enum {string}
+             */
+            evidence_state: "supported" | "missing" | "ambiguous" | "conflicting";
+            /** Frequency */
+            frequency?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Route */
+            route?: string | null;
+            /** Unit */
+            unit?: string | null;
+        };
+        /** PatientDraft */
+        PatientDraft: {
+            /** Summary */
+            summary?: string | null;
+        };
+        /** PatientFollowUp */
+        PatientFollowUp: {
+            /** Instruction */
+            instruction: string | null;
+            /** Timeframe */
+            timeframe: string | null;
+        };
+        /** PatientMedicationRow */
+        PatientMedicationRow: {
+            /** Dose */
+            dose: string | null;
+            /** Duration */
+            duration: string | null;
+            /** Frequency */
+            frequency: string | null;
+            /** Name */
+            name: string | null;
+            /** Route */
+            route: string | null;
+            /** Unit */
+            unit: string | null;
+        };
+        /** PatientView */
+        PatientView: {
+            /** Activity */
+            activity: string | null;
+            /**
+             * Approved At
+             * Format: date-time
+             */
+            approved_at: string;
+            /** Case Id */
+            case_id: string;
+            /** Content Hash */
+            content_hash: string;
+            /** Diet */
+            diet: string | null;
+            /** Follow Up */
+            follow_up: components["schemas"]["PatientFollowUp"][];
+            /** Medications */
+            medications: components["schemas"]["PatientMedicationRow"][];
+            /** Notice */
+            notice: string;
+            /**
+             * Provider Mode
+             * @enum {string}
+             */
+            provider_mode: "mock" | "openai_compatible";
+            /** Revision Id */
+            revision_id: string;
+            /** Summary */
+            summary: string | null;
+            /** Warning Signs */
+            warning_signs: string[];
+        };
         /** ReadyResponse */
         ReadyResponse: {
             /** Detail */
@@ -168,6 +515,75 @@ export interface components {
              */
             status: "ready" | "not_ready";
         };
+        /** ReviewRecord */
+        ReviewRecord: {
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Resolution Note */
+            resolution_note: string | null;
+            /**
+             * Reviewed At
+             * Format: date-time
+             */
+            reviewed_at: string;
+            /** Revision Id */
+            revision_id: string;
+        };
+        /** ReviewRequest */
+        ReviewRequest: {
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Resolution Note */
+            resolution_note?: string | null;
+            /** Revision Id */
+            revision_id: string;
+        };
+        /** RevisionView */
+        RevisionView: {
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            extracted_fields: components["schemas"]["ExtractedFields"];
+            gate: components["schemas"]["Gate"];
+            /** Model */
+            model: string;
+            /** Number */
+            number: number;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "model" | "reviewer_edit";
+            patient_draft: components["schemas"]["PatientDraft"];
+            /** Prompt Version */
+            prompt_version: string;
+            /**
+             * Provider Mode
+             * @enum {string}
+             */
+            provider_mode: "mock" | "openai_compatible";
+            /** Revision Id */
+            revision_id: string;
+            /** Source Documents */
+            source_documents: components["schemas"]["SourceDocument"][];
+            timings: components["schemas"]["Timings"];
+            /** Uncertainties */
+            uncertainties: components["schemas"]["Uncertainty"][];
+        };
         /** SessionResponse */
         SessionResponse: {
             /**
@@ -180,6 +596,48 @@ export interface components {
              * @enum {string}
              */
             role: "visitor" | "reviewer";
+        };
+        /** SourceDocument */
+        SourceDocument: {
+            /** Document Id */
+            document_id: string;
+            /** Pages */
+            pages: components["schemas"]["SourcePage"][];
+            /** Title */
+            title: string;
+        };
+        /** SourcePage */
+        SourcePage: {
+            /** Page */
+            page: number;
+            /** Text */
+            text: string;
+        };
+        /** TextItem */
+        TextItem: {
+            /** Citations */
+            citations?: components["schemas"]["Citation"][];
+            /**
+             * Evidence State
+             * @enum {string}
+             */
+            evidence_state: "supported" | "missing" | "ambiguous" | "conflicting";
+            /** Text */
+            text?: string | null;
+        };
+        /** Timings */
+        Timings: {
+            /** Model Ms */
+            model_ms: number | null;
+            /** Total Ms */
+            total_ms: number;
+        };
+        /** Uncertainty */
+        Uncertainty: {
+            /** Field */
+            field: string;
+            /** Note */
+            note: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -203,6 +661,344 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_cases_cases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_case_from_fixture_cases_from_fixture_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCaseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseView"];
+                };
+            };
+            /** @description Fixture not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_case_cases__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseView"];
+                };
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_case_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict with the current case state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_draft_cases__case_id__draft_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseView"];
+                };
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict with the current case state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_patient_view_cases__case_id__patient_view_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientView"];
+                };
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict with the current case state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    process_case_cases__case_id__process_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseView"];
+                };
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict with the current case state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_case_cases__case_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseView"];
+                };
+            };
+            /** @description Case not found for this session */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict with the current case state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     example_example_post: {
         parameters: {
             query?: never;
@@ -223,6 +1019,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExampleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_fixtures_fixtures_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixtureSummary"][];
                 };
             };
             /** @description Validation Error */

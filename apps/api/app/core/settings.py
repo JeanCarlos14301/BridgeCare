@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_timeout_seconds: float = Field(default=60, gt=0, le=300)
     database_url: str = "sqlite:///./app.db"
+    # Empty means: search parent folders for fixtures/discharge (repository checkout).
+    fixtures_dir: str = ""
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
     evolus_enabled: bool = False
     evolus_api_key: SecretStr = SecretStr("")

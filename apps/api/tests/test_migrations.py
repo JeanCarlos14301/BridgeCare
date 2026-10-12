@@ -4,7 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from app.db.migrations import MigrationError, applied_versions, apply_migrations
+from app.db.migrations import (
+    MigrationError,
+    applied_versions,
+    apply_migrations,
+    discover_migrations,
+)
 from app.db.session import build_engine
 
 
@@ -18,8 +23,10 @@ def _database_url(tmp_path: Path) -> str:
 
 def test_bundled_migrations_are_recorded(tmp_path: Path) -> None:
     engine = build_engine(_database_url(tmp_path))
-    assert apply_migrations(engine) == ["0001_initial", "0002_sessions"]
-    assert applied_versions(engine) == {"0001_initial", "0002_sessions"}
+    bundled = [path.stem for path in discover_migrations()]
+    assert bundled[:2] == ["0001_initial", "0002_sessions"]
+    assert apply_migrations(engine) == bundled
+    assert applied_versions(engine) == set(bundled)
     engine.dispose()
 
 

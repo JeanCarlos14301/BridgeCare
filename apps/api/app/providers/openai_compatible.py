@@ -5,7 +5,14 @@ import httpx
 
 from app.core.errors import ProviderError
 from app.core.settings import Settings
-from app.providers.base import GenerationResult, LLMProvider
+from app.providers.base import (
+    ExtractionRequest,
+    ExtractionResult,
+    GenerationResult,
+    LLMProvider,
+)
+
+EXTRACTION_MAX_TOKENS = 2048
 
 
 class OpenAICompatibleProvider(LLMProvider):
@@ -53,6 +60,34 @@ class OpenAICompatibleProvider(LLMProvider):
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ProviderError("Provider returned invalid JSON") from exc
         return GenerationResult(text=generated, provider_mode=self.mode)
+
+    async def extract(self, request: ExtractionRequest) -> ExtractionResult:
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": request.system_prompt},
+                {"role": "user", "content": request.user_prompt},
+            ],
+            "max_tokens": EXTRACTION_MAX_TOKENS,
+            "temperature": 0,
+            # vLLM's OpenAI-compatible server supports JSON mode through response_format.
+            "response_format": {"type": "json_object"},
+        }
+        response = await self._post_with_one_retry(payload)
+        try:
+            body: dict[str, Any] = response.json()
+            choice = body["choices"][0]
+            content = choice["message"]["content"]
+            if not isinstance(content, str):
+                raise TypeError
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ProviderError("Provider returned invalid JSON") from exc
+        return ExtractionResult(
+            raw_text=content,
+            truncated=choice.get("finish_reason") == "length",
+            model=str(body.get("model") or self.model),
+            provider_mode=self.mode,
+        )
 
     async def _post_with_one_retry(self, payload: dict[str, Any]) -> httpx.Response:
         for attempt in range(2):
