@@ -1,0 +1,1 @@
+{"fixture_id":"fx06_provider_failure","expected_outcome":"failed","expected_block_reasons":["provider_error"],"medications":[{"name":"Vitamin D","dose":"1000","unit":"units","route":"by mouth","frequency":"once a day","duration":"30 days","evidence_state":"missing"}],"follow_up_count":1,"warning_signs_count":3,"forbidden_output_substrings":[]}

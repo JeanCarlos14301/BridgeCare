@@ -1,30 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createRoot } from "react-dom/client";
 import { act } from "react";
-import App from "./App";
+import { createRoot } from "react-dom/client";
+import { GatePanel, PatientViewPanel, SourcePages } from "./App";
 
-afterEach(() => {
-  vi.restoreAllMocks();
-  document.body.innerHTML = "";
+function render(element: React.ReactNode) { const node = document.createElement("div"); document.body.append(node); const root = createRoot(node); act(() => root.render(element)); return { node, root }; }
+afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ""; });
+
+describe("review UI", () => {
+  it("lists gate blocking reasons", async () => { const view = render(<GatePanel gate={{ approvable: false, requires_resolution_note: false, blocking_reasons: [{ code: "citation_not_found", field: "medications[0]", message: "Citation missing" }] }} />); await act(async () => {}); expect(view.node.textContent).toContain("citation_not_found"); view.root.unmount(); });
+  it("highlights the selected citation on its source page", async () => { const view = render(<SourcePages documents={[{ document_id: "d", title: "Source", pages: [{ page: 1, text: "Before exact quote after" }] }]} selected={{ document_id: "d", page: 1, quote: "exact quote" }} />); await act(async () => {}); expect(view.node.querySelector("mark")?.textContent).toBe("exact quote"); view.root.unmount(); });
+  it("shows a clear blocked state for a 409 patient view", async () => { vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(new Response("blocked", { status: 409 })))); const view = render(<PatientViewPanel caseId="case-1" />); await act(async () => { (view.node.querySelector("button") as HTMLButtonElement).click(); }); expect(view.node.textContent).toContain("blocked until the current revision"); view.root.unmount(); });
 });
-
-describe("App", () => {
-  it("shows API readiness and an explicit mock badge", async () => {
-    vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve(url.endsWith("health")
-        ? { status: "ok", provider_mode: "mock" }
-        : { status: "ready", provider_mode: "mock", detail: "Mock provider is ready" }),
-    })));
-    const rootElement = document.createElement("div");
-    document.body.appendChild(rootElement);
-    const root = createRoot(rootElement);
-    await act(async () => root.render(<App />));
-    expect(document.body.textContent).toContain("MOCK");
-    expect(document.body.textContent).toContain("Online");
-    expect(document.body.textContent).toContain("Mock provider is ready");
-    root.unmount();
-  });
-});
-

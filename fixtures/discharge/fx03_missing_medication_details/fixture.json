@@ -1,0 +1,1 @@
+{"id":"fx03_missing_medication_details","title":"Missing medication details","scenario":"missing_fields","description":"Medication instructions where duration and frequency are absent.","mock_behavior":"respond"}
