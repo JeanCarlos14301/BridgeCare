@@ -11,9 +11,19 @@ Nothing here has been deployed yet. Record the real URL, date and checks in this
 
 ## 1. Host
 
-- Any Linux VM with Docker Engine and the Compose plugin: 1 vCPU, 2 GB RAM, 20 GB disk is enough.
-- Firewall: allow inbound 22 (SSH, ideally restricted to your IP), 80 and 443. Nothing else.
+- An Ubuntu 22.04 or 24.04 VM: 1 vCPU, 2 GB RAM, 20 GB disk is enough (1 GB works with the swap the bootstrap adds).
+- Provider firewall: allow inbound 22 (SSH, ideally restricted to your IP), 80 and 443. Nothing else.
 - Creating the VM may cost money. The team lead chooses the provider and sets a budget alert first.
+
+Prepare the host (Docker Engine and Compose plugin from Docker's apt repository, ufw with 22/80/443 only, swap on small machines):
+
+```bash
+sudo apt-get update && sudo apt-get install -y git
+git clone https://github.com/JeanCarlos14301/BridgeCare.git && cd BridgeCare
+sudo bash scripts/vm-bootstrap.sh
+```
+
+While the repository is private, `git clone` needs credentials: use a fine-grained personal access token with read-only access to this repository, and do not store it on the VM.
 
 ## 2. Hostname
 
@@ -25,7 +35,6 @@ Caddy needs a public DNS name for a Let's Encrypt certificate:
 ## 3. Configure
 
 ```bash
-git clone https://github.com/JeanCarlos14301/BridgeCare.git && cd BridgeCare
 cp .env.example .env
 ```
 
@@ -52,18 +61,17 @@ docker compose -f compose.yaml -f compose.prod.yaml up -d --build
 docker compose -f compose.yaml -f compose.prod.yaml ps
 ```
 
-## 5. Verify (from your own machine)
+## 5. Verify (from your own machine, not the VM)
 
 ```bash
-curl -sI https://$PUBLIC_HOST/ | head -n 1                    # HTTP/2 200
-curl -s -o /dev/null -w "%{http_code}\n" http://$PUBLIC_HOST/  # 308 redirect
-curl -s https://$PUBLIC_HOST/api/ready                         # status ready, provider_mode
-nc -zv $PUBLIC_HOST 8000                                       # must fail: API not exposed
+uv run --project apps/api python scripts/check_deploy.py https://$PUBLIC_HOST
 ```
+
+It checks HTTPS, the HTTP-to-HTTPS redirect, the security headers, the session cookie flags (`Secure`, `HttpOnly`, `SameSite=Strict`), API health and readiness, the fixture list, and that ports 8000 and 5173 are unreachable. It warns when the deployment still runs the mock provider. Run it from outside the VM so the port checks are meaningful.
 
 Then open the URL in an incognito window, pick a fixture, log in as reviewer, approve, and print the patient view. The plan's check for Wednesday is that the public URL opens from incognito.
 
-Verified locally with `PUBLIC_HOST=localhost`: HTTPS 200, HTTP 308 to HTTPS, HSTS/CSP/nosniff/Referrer-Policy headers, `Secure; HttpOnly; SameSite=Strict` session cookie, reviewer login, ports 8000 and 5173 closed.
+Verified locally with `PUBLIC_HOST=localhost` and `check_deploy.py https://localhost --insecure` (Caddy's local CA): 15/15 checks passed, with the mock-provider warning.
 
 ## 6. Operate
 

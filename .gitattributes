@@ -6,5 +6,6 @@ scripts/doctor text eol=lf
 scripts/smoke text eol=lf
 scripts/smoke-amd text eol=lf
 scripts/export-contract text eol=lf
+scripts/check-deploy text eol=lf
 *.sh text eol=lf
 *.Dockerfile text eol=lf
