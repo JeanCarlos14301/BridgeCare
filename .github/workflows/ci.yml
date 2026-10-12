@@ -87,7 +87,9 @@ jobs:
           PUBLIC_HOST: ci.example.test
           SESSION_SECRET: ci-placeholder-session-secret-not-used
           REVIEWER_PASSWORD: ci-placeholder-password
-        run: docker compose -f compose.yaml -f compose.prod.yaml config --quiet
+        run: |
+          docker compose -f compose.yaml -f compose.prod.yaml config --quiet
+          docker compose -f compose.yaml -f compose.tunnel.yaml config --quiet
 
       - name: Scan for secrets
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3

@@ -4,7 +4,7 @@
 
 - Jean: `infra/`, `.github/`, `scripts/`, `apps/api/app/core/`, `apps/api/app/db/`
 - Daniel: `apps/api/app/api/`, `apps/api/app/schemas/`, `apps/api/app/services/`, `packages/contracts/`
-- Felipe: `apps/api/app/providers/`, `apps/api/app/prompts/`, `eval/`
+- Felipe: `apps/api/app/providers/`, `apps/api/app/prompts/`, `eval/`, `fixtures/`
 - Edgar: `apps/web/`
 
 ## Commands
