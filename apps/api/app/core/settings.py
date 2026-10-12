@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     llm_api_key: SecretStr = SecretStr("")
     llm_model: str = ""
     llm_timeout_seconds: float = Field(default=60, gt=0, le=300)
+    # Thinking tokens count toward max_tokens on reasoning models; empty omits the field.
+    llm_reasoning_effort: Literal["", "none", "minimal", "low", "medium", "high"] = ""
+    llm_max_output_tokens: int = Field(default=4096, ge=256, le=32768)
     database_url: str = "sqlite:///./app.db"
     # Empty means: search parent folders for fixtures/discharge (repository checkout).
     fixtures_dir: str = ""
