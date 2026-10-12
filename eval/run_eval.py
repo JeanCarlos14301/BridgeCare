@@ -62,7 +62,7 @@ def run(base_url: str) -> dict[str, Any]:
     end_to_end_ms: list[float] = []
     model_ms: list[float] = []
 
-    with httpx.Client(base_url=base_url.rstrip("/"), timeout=30.0) as client:
+    with httpx.Client(base_url=base_url.rstrip("/"), timeout=150.0) as client:  # real model calls take ~25 s; matches nginx
         session = client.post("/session")
         if session.status_code >= 400:
             errors.append(api_error("POST /session", session))

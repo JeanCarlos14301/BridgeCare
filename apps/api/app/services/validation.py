@@ -66,11 +66,16 @@ class _Checker:
             page_text = self.pages.get((citation.document_id, citation.page))
             quote = normalize(citation.quote)
             if page_text is None or not quote or quote not in page_text:
+                message = (
+                    "The cited document or page does not exist."
+                    if page_text is None
+                    else "Quoted text was not found on the cited page."
+                )
                 self.reasons.append(
                     BlockingReason(
                         code="citation_not_found",
                         field=f"{path}.citations[{index}]",
-                        message="Quoted text was not found on the cited page.",
+                        message=message,
                     )
                 )
             else:
