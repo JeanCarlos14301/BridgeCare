@@ -78,9 +78,7 @@ async def login(
         throttle.record_failure()
         audit.info(json.dumps({"event": "reviewer_login_failed"}))
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
-    # Always issue a fresh token on privilege change to prevent session fixation.
-    store.revoke(db, token)
-    new_token, info = store.create(db, "reviewer")
+    new_token, info = store.rotate(db, token, "reviewer")
     set_session_cookie(response, new_token, info, secure=not settings.is_development)
     audit.info(json.dumps({"event": "reviewer_login", "session_id": info.id}))
     return _response(info)

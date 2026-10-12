@@ -100,6 +100,23 @@ class SessionStore:
             id=row["id"], role=role, expires_at=datetime.fromisoformat(row["expires_at"])
         )
 
+    def rotate(self, db: Session, token: str | None, role: Role) -> tuple[str, SessionInfo]:
+        """Issue a fresh token for a privilege change and carry over the caller's cases.
+
+        A new token prevents session fixation. The caller proved possession of the old
+        token, so cases it created move to the new session instead of being cascade-deleted
+        with the old one.
+        """
+        previous = self.resolve(db, token)
+        new_token, info = self.create(db, role)
+        if previous is not None:
+            db.execute(
+                text("UPDATE cases SET session_id = :new WHERE session_id = :old"),
+                {"new": info.id, "old": previous.id},
+            )
+        self.revoke(db, token)
+        return new_token, info
+
     def revoke(self, db: Session, token: str | None) -> None:
         if not token:
             return
