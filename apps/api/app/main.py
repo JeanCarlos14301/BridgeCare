@@ -1,3 +1,5 @@
+import json
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -9,6 +11,7 @@ from app.api.health import router as health_router
 from app.core.errors import install_error_handlers
 from app.core.logging import configure_logging, metadata_logging_middleware
 from app.core.settings import get_settings
+from app.db.migrations import apply_migrations
 from app.db.session import build_engine, build_session_factory
 from app.providers import build_provider
 
@@ -17,6 +20,10 @@ from app.providers import build_provider
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     engine = build_engine(settings.database_url)
+    applied = apply_migrations(engine)
+    logging.getLogger("bridgecare.db").info(
+        json.dumps({"event": "migrations_applied", "versions": applied})
+    )
     app.state.db_sessions = build_session_factory(engine)
     app.state.provider = build_provider(settings)
     yield
