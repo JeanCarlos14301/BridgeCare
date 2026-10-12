@@ -79,6 +79,9 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose config --quiet
 
+      - name: Build container images
+        run: docker compose build
+
       - name: Validate production Compose overlay
         env:
           PUBLIC_HOST: ci.example.test
