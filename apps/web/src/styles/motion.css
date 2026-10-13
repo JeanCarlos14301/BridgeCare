@@ -1,9 +1,19 @@
-/* Keyframes. Every animation here uses transform, opacity, box-shadow, or stroke only. */
+/* Keyframes. Motion is short and quiet; it uses transform, opacity, box-shadow, or stroke only. */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
 
   to {
@@ -15,7 +25,7 @@
 @keyframes pop-in {
   from {
     opacity: 0;
-    transform: scale(.85);
+    transform: scale(.96);
   }
 
   to {
@@ -27,7 +37,7 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(.96);
+    transform: translateY(8px);
   }
 
   to {
@@ -56,51 +66,9 @@
   }
 }
 
-@keyframes sweep {
-  from {
-    transform: translateX(-100%);
-  }
-
-  to {
-    transform: translateX(260%);
-  }
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes drift {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  to {
-    transform: translate3d(4rem, 2rem, 0) scale(1.08);
-  }
-}
-
-@keyframes pulse-ring {
-  from {
-    opacity: .7;
-    transform: scale(1);
-  }
-
-  to {
-    opacity: 0;
-    transform: scale(2.6);
-  }
-}
-
-@keyframes ring {
-  from {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--gate) 50%, transparent);
-  }
-
-  to {
-    box-shadow: 0 0 0 14px transparent;
   }
 }
 
@@ -111,7 +79,7 @@
   }
 
   25% {
-    box-shadow: 0 0 0 4px var(--accent-glow), 0 0 28px var(--accent-glow);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 18%, transparent);
   }
 }
 
@@ -127,7 +95,7 @@
   }
 
   40% {
-    transform: rotate(-12deg) scale(1.1);
+    transform: rotate(-10deg);
   }
 
   100% {
@@ -137,7 +105,7 @@
 
 @keyframes mark-glow {
   from {
-    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 .6rem color-mix(in srgb, var(--mark-ring) 45%, transparent);
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 .5rem color-mix(in srgb, var(--mark-ring) 35%, transparent);
   }
 
   to {
@@ -157,10 +125,8 @@
     scroll-behavior: auto !important;
   }
 
-  .glow,
-  .pulse-dot::after,
+  .spinner,
   .step-active .step-icon::after,
-  .scenario-card.is-processing::after,
   .skeleton-block,
   .skeleton-line {
     animation: none !important;

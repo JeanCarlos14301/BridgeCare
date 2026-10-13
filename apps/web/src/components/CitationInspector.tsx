@@ -7,10 +7,11 @@ import { GatePanel } from "./GatePanel";
 import { chipId, type SelectField, type Selection } from "./selection";
 import { SourcePanel } from "./SourcePanel";
 
-type Tab = "source" | "fields";
+type Tab = "source" | "fields" | "review";
 const TABS: { id: Tab; label: string }[] = [
-  { id: "fields", label: "Fields" },
   { id: "source", label: "Source" },
+  { id: "fields", label: "Fields" },
+  { id: "review", label: "Review" },
 ];
 const WIDE_QUERY = "(min-width: 1024px)";
 
@@ -43,13 +44,15 @@ function fieldCard(fieldKey: string) {
 }
 
 /**
- * Dual-pane inspector: source pages on the left, gate and fields on the right (>= 1024 px), or two
- * tabs on smaller screens. Fields, chips, gate reasons, and the citation map all link both ways.
+ * Review workspace: source pages, extracted fields, and a review rail (overview, gate, decision,
+ * patient sheet) side by side on desktop, or three tabs below 1024 px. Fields, chips, gate reasons,
+ * and the citation map all link both ways.
  */
 export function CitationInspector(props: {
   documents: SourceDocument[];
   revision: Revision;
   approved?: boolean;
+  railTop?: ReactNode;
   after?: ReactNode;
 }) {
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -133,11 +136,12 @@ export function CitationInspector(props: {
   };
 
   const onTabKey = (event: ReactKeyboardEvent) => {
+    const position = TABS.findIndex((item) => item.id === tab);
     const keys: Record<string, Tab> = {
-      ArrowLeft: tab === "fields" ? "source" : "fields",
-      ArrowRight: tab === "fields" ? "source" : "fields",
-      Home: "fields",
-      End: "source",
+      ArrowLeft: TABS[(position + TABS.length - 1) % TABS.length].id,
+      ArrowRight: TABS[(position + 1) % TABS.length].id,
+      Home: TABS[0].id,
+      End: TABS[TABS.length - 1].id,
     };
     const next = keys[event.key];
     if (!next) return;
@@ -183,14 +187,17 @@ export function CitationInspector(props: {
         onPickTrace={pickTrace}
         {...paneProps("source")}
       />
-      <div id="pane-fields" className="workspace-side inspector-pane pane-fields" {...paneProps("fields")}>
+      <div id="pane-fields" className="inspector-pane pane-fields" {...paneProps("fields")}>
+        <FieldsPanel revision={props.revision} selection={selection} flashKey={flashKey} onSelect={select} />
+      </div>
+      <div id="pane-review" className="inspector-pane pane-review" {...paneProps("review")}>
+        {props.railTop}
         <GatePanel
           gate={props.revision.gate}
           approved={props.approved}
           fieldLabel={labelOf}
           onGoToField={goToField}
         />
-        <FieldsPanel revision={props.revision} selection={selection} flashKey={flashKey} onSelect={select} />
         {props.after}
       </div>
     </div>

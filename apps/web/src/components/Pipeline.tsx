@@ -54,6 +54,9 @@ function steps(caseView: CaseView | null, processing: boolean): Step[] {
   if (reasons === 0) {
     gate.state = "done";
     gate.detail = "No blocking reasons";
+  } else if (revision.gate.approvable && caseView.status === "approved") {
+    gate.state = "done";
+    gate.detail = "Resolved in the reviewer's note";
   } else if (revision.gate.approvable) {
     gate.state = "warn";
     gate.detail = "Resolution note required";
@@ -78,11 +81,15 @@ function steps(caseView: CaseView | null, processing: boolean): Step[] {
   return [source, extract, verify, gate, review, sheet];
 }
 
-export function Pipeline({ caseView, processing }: { caseView: CaseView | null; processing: boolean }) {
-  const list = steps(caseView, processing);
+/**
+ * The safety pipeline. "strip" is the compact status bar under the toolbar; "guide" explains the
+ * flow on the empty start screen. Every state comes from the case response.
+ */
+export function Pipeline(props: { caseView: CaseView | null; processing: boolean; variant: "strip" | "guide" }) {
+  const list = steps(props.caseView, props.processing);
   return (
-    <section className="pipeline-section" aria-labelledby="pipeline-title">
-      <h2 id="pipeline-title" className="sr-only">
+    <section className={`pipeline-${props.variant}`} aria-labelledby={`pipeline-${props.variant}-title`}>
+      <h2 id={`pipeline-${props.variant}-title`} className="sr-only">
         Safety pipeline
       </h2>
       <ol className="pipeline">
@@ -93,7 +100,7 @@ export function Pipeline({ caseView, processing }: { caseView: CaseView | null; 
             style={{ "--i": index } as CSSProperties}
           >
             <span className="step-icon">
-              <Icon name={step.icon} size={18} />
+              <Icon name={step.state === "done" && props.variant === "strip" ? "check" : step.icon} size={14} />
             </span>
             <span className="step-text">
               <span className="step-label">

@@ -9,8 +9,9 @@ import {
   type ProviderMode,
   type Role,
 } from "./api";
-import { AppShell } from "./components/AppShell";
+import { AppShell, ThemeToggle } from "./components/AppShell";
 import { CaseHeader } from "./components/CaseHeader";
+import { CaseNav } from "./components/CaseNav";
 import { CaseOverview } from "./components/CaseOverview";
 import { CitationInspector } from "./components/CitationInspector";
 import { Icon } from "./components/Icon";
@@ -19,7 +20,6 @@ import { PatientSheet } from "./components/PatientSheet";
 import { Pipeline } from "./components/Pipeline";
 import { ProviderPill } from "./components/ProviderPill";
 import { ReviewBar } from "./components/ReviewBar";
-import { ScenarioPicker } from "./components/ScenarioPicker";
 import { Toast, type ToastMessage, type ToastTone } from "./components/Toast";
 import { WorkspaceSkeleton } from "./components/WorkspaceSkeleton";
 
@@ -158,85 +158,108 @@ export default function App() {
 
   const revision = caseView?.revision ?? null;
   const fixtureTitle = fixtures.find((fixture) => fixture.id === caseView?.fixture_id)?.title ?? null;
-  const session =
-    role === "reviewer" ? (
-      <>
-        <span className="pill pill-role">
-          <Icon name="userCheck" size={14} />
-          Reviewer
-        </span>
-        <button type="button" className="button button-sm" onClick={logout}>
-          <Icon name="logout" size={14} />
-          Log out
-        </button>
-      </>
-    ) : (
-      <LoginDialog onLogin={login} />
-    );
+  const processing = processingId !== null;
+
+  const sidebarFooter = (
+    <>
+      <ProviderPill mode={providerMode ?? revision?.provider_mode ?? null} revision={revision} />
+      <div className="session-row">
+        {role === "reviewer" ? (
+          <>
+            <span className="pill pill-role">
+              <Icon name="userCheck" size={14} />
+              Reviewer
+            </span>
+            <button type="button" className="button button-sm button-ghost" onClick={logout}>
+              <Icon name="logout" size={14} />
+              Log out
+            </button>
+          </>
+        ) : (
+          <LoginDialog onLogin={login} />
+        )}
+        <ThemeToggle />
+      </div>
+    </>
+  );
+
+  const toolbar = caseView ? (
+    <CaseHeader caseView={caseView} title={fixtureTitle} />
+  ) : (
+    <div className="toolbar-content">
+      <div className="case-title">
+        <h1>{processing ? "Processing document…" : "No document open"}</h1>
+      </div>
+      <p className="muted toolbar-hint">Review. Verify. Approve.</p>
+    </div>
+  );
 
   return (
     <AppShell
-      status={<ProviderPill mode={providerMode ?? revision?.provider_mode ?? null} revision={revision} />}
-      session={session}
-    >
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow hero-eyebrow">
-            <Icon name="shieldCheck" size={14} />
-            Synthetic documents only
-          </p>
-          <h1 id="hero-title">
-            Review. Verify. <span className="brand-text">Approve.</span>
-          </h1>
-          <p className="lede">
-            BridgeCare turns a discharge document into a patient sheet. Every value links to its quote, unsafe output
-            is blocked, and only a reviewer can release it.
-          </p>
-        </div>
-        <ScenarioPicker
+      sidebar={
+        <CaseNav
           fixtures={fixtures}
-          activeId={caseView?.fixture_id ?? null}
+          activeId={processingId ?? caseView?.fixture_id ?? null}
+          activeStatus={caseView?.status ?? null}
           processingId={processingId}
           onPick={createAndProcess}
         />
-      </section>
+      }
+      sidebarFooter={sidebarFooter}
+      toolbar={toolbar}
+      strip={caseView || processing ? <Pipeline caseView={caseView} processing={processing} variant="strip" /> : null}
+    >
+      {processing && <WorkspaceSkeleton />}
 
-      <Pipeline caseView={caseView} processing={processingId !== null} />
+      {!processing && !caseView && (
+        <div className="empty-state">
+          <div className="empty-intro">
+            <span className="empty-icon">
+              <Icon name="file" size={24} />
+            </span>
+            <h2>Select a discharge document</h2>
+            <p className="muted">
+              Choose a synthetic document from the list. BridgeCare extracts every field with its quote, blocks unsafe
+              output, and waits for a reviewer before anything reaches the patient.
+            </p>
+            <p className="empty-note">
+              <Icon name="shieldCheck" size={14} />
+              Synthetic documents only. Uploads are disabled.
+            </p>
+          </div>
+          <Pipeline caseView={null} processing={false} variant="guide" />
+        </div>
+      )}
 
-      {processingId !== null && <WorkspaceSkeleton />}
-
-      {caseView && (
-        <div className="case-area">
-          <CaseHeader caseView={caseView} title={fixtureTitle} />
-          {revision ? (
-            <>
-              <CaseOverview revision={revision} />
-              <CitationInspector
-                key={revision.revision_id}
-                documents={caseView.source_documents}
-                revision={revision}
-                approved={caseView.status === "approved"}
-                after={
-                  <>
-                    <ReviewBar
-                      role={role}
-                      revision={revision}
-                      review={caseView.review}
-                      note={resolutionNote}
-                      onNoteChange={setResolutionNote}
-                      onDecide={review}
-                      busy={busy}
-                    />
-                    <PatientSheet
-                      key={`${revision.revision_id}-${caseView.status}`}
-                      caseId={caseView.case_id}
-                      approved={caseView.status === "approved"}
-                    />
-                  </>
-                }
-              />
-            </>
-          ) : (
+      {caseView &&
+        (revision ? (
+          <CitationInspector
+            key={revision.revision_id}
+            documents={caseView.source_documents}
+            revision={revision}
+            approved={caseView.status === "approved"}
+            railTop={<CaseOverview revision={revision} />}
+            after={
+              <>
+                <ReviewBar
+                  role={role}
+                  revision={revision}
+                  review={caseView.review}
+                  note={resolutionNote}
+                  onNoteChange={setResolutionNote}
+                  onDecide={review}
+                  busy={busy}
+                />
+                <PatientSheet
+                  key={`${revision.revision_id}-${caseView.status}`}
+                  caseId={caseView.case_id}
+                  approved={caseView.status === "approved"}
+                />
+              </>
+            }
+          />
+        ) : (
+          <div className="empty-state">
             <div className="card failure-card">
               <Icon name="alert" size={22} />
               <div>
@@ -246,9 +269,8 @@ export default function App() {
                 </p>
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        ))}
 
       <Toast toast={toast} onDismiss={dismissToast} />
     </AppShell>

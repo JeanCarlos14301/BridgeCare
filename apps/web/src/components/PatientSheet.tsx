@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { api, isConflict, type PatientView } from "../api";
 import { shortHash } from "../lib/caseStats";
@@ -116,6 +116,14 @@ function Sheet({ view }: { view: PatientView }) {
 export function PatientSheet({ caseId, approved = false }: { caseId: string; approved?: boolean }) {
   const [view, setView] = useState<PatientView | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (!view || !element || element.open) return;
+    if (typeof element.showModal === "function") element.showModal();
+    else element.setAttribute("open", "");
+  }, [view]);
 
   const load = async () => {
     try {
@@ -131,15 +139,19 @@ export function PatientSheet({ caseId, approved = false }: { caseId: string; app
     }
   };
 
+  const close = () => {
+    dialog.current?.close();
+    setView(null);
+  };
+
   return (
     <section className={`card patient-panel${approved ? " is-unlocked" : ""}`} aria-labelledby="patient-title">
       <div className="patient-head">
         <span className="lock-badge">
-          <Icon name={approved ? "unlock" : "lock"} size={20} />
+          <Icon name={approved ? "unlock" : "lock"} size={18} />
         </span>
         <div>
-          <p className="eyebrow">Patient sheet</p>
-          <h2 id="patient-title">Printable patient view</h2>
+          <h2 id="patient-title">Patient sheet</h2>
           <p className="muted">
             {approved
               ? "Unlocked: this revision has a valid approval."
@@ -148,22 +160,32 @@ export function PatientSheet({ caseId, approved = false }: { caseId: string; app
         </div>
       </div>
       <div className="button-row">
-        <button type="button" className="button" onClick={load}>
+        <button type="button" className={approved ? "button button-primary" : "button"} onClick={load}>
           Open patient sheet
         </button>
-        {view && (
-          <button type="button" className="button button-primary" onClick={() => window.print()}>
-            <Icon name="printer" size={16} />
-            Print
-          </button>
-        )}
       </div>
       {message && (
         <p className="alert" role="alert">
           {message}
         </p>
       )}
-      {view && <Sheet view={view} />}
+      {view && (
+        <dialog ref={dialog} className="dialog sheet-dialog" aria-label="Patient sheet" onClose={() => setView(null)}>
+          <div className="sheet-dialog-bar">
+            <p className="sheet-dialog-title">Patient sheet preview</p>
+            <div className="button-row">
+              <button type="button" className="button button-primary" onClick={() => window.print()}>
+                <Icon name="printer" size={16} />
+                Print
+              </button>
+              <button type="button" className="button" onClick={close}>
+                Close
+              </button>
+            </div>
+          </div>
+          <Sheet view={view} />
+        </dialog>
+      )}
     </section>
   );
 }

@@ -35,8 +35,7 @@ export function ReviewBar(props: {
 
   return (
     <section className="card review-bar" aria-labelledby="review-title">
-      <p className="eyebrow">Reviewer decision</p>
-      <h2 id="review-title">Review. Verify. Approve.</h2>
+      <h2 id="review-title">Reviewer decision</h2>
 
       {currentReview ? (
         <div className={`decision-panel decision-${currentReview.decision}`}>

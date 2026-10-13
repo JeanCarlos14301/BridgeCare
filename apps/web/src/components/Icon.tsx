@@ -51,10 +51,10 @@ const PATHS = {
     </>
   ),
   pill: (
-    <g transform="rotate(-45 12 12)">
-      <rect x="3" y="8.5" width="18" height="7" rx="3.5" />
-      <path d="M12 8.5v7" />
-    </g>
+    <>
+      <rect x="2.5" y="8" width="19" height="8" rx="4" />
+      <path d="M12 8v8" />
+    </>
   ),
   calendar: (
     <>

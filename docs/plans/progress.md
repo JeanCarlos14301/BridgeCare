@@ -173,6 +173,29 @@ citation map, and gate "Go to field". Browser (production build with the nginx C
 Edge): reviewer flow works end to end, no console errors, 375 px without horizontal scroll, light
 theme checked.
 
+## Desktop clinical redesign (user feedback on the polish pass)
+
+Same branch `feat/ui-polish`. The user found the colours poor and the layout too much like a web
+page; the app is a desktop work tool. Choices confirmed by the user: light clinical palette, desktop
+app layout.
+
+- Palette: neutral greys and white panels, one restrained green (`#2f7d32`) for primary actions and
+  the wordmark, soft status colours; a sober slate dark theme is optional. Selection uses the
+  neutral ink colour so it is never read as "supported". No neon, glows, or grid backdrop. 35
+  text/background pairs checked (light and dark), all AA.
+- Layout: fixed sidebar (document list, provider pill, session, theme), toolbar with case title,
+  status and revision, a compact pipeline strip, and a full-height workspace. Three columns with
+  their own scroll at >= 1440 px (source, fields, review rail with overview, gate, decision, patient
+  sheet); two columns from 1024 px with fields and review stacked; three tabs below 1024 px.
+- Empty screen explains the safety pipeline instead of a marketing hero.
+- The patient sheet opens in a large dialog with Print; print CSS prints only the sheet.
+- Medication values use a container query (five cells when the column is wide, three otherwise).
+
+Gates: lint 0, typecheck 0, tests 0 (27/27 in 6 files), build 0, no line > 120, no
+`dangerouslySetInnerHTML`, no absolute URLs in source. Browser (production build with the nginx CSP
+header): reviewer flow end to end at 1920x1080 and 1440x900 with no console errors; 1100, 1280 and
+1366 px checked for overlap (none) and horizontal scroll (none); dark theme checked.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of

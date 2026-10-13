@@ -1,120 +1,125 @@
 /*
- * Design tokens. Palette inspired by evolus.ai (see docs/plans/design-notes.md), adjusted so every
- * text/background pair used in the UI passes WCAG AA. Lime is a brand colour only and never marks
- * an evidence state.
+ * Design tokens for a light clinical desktop app. Neutral surfaces, one restrained green for
+ * primary actions and the wordmark, soft status colours. Every text/background pair used in the
+ * UI passes WCAG AA. Green is never used as a selection colour, so "selected" is not read as
+ * "supported"; selection is drawn in the neutral ink colour.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* surfaces */
-  --bg: #0a0a0a;
-  --surface-1: #101010;
-  --surface-2: #171717;
-  --surface-3: #1e1e1e;
-  --border: #262626;
-  --border-strong: #3a3a3a;
-  --text: #fafafa;
-  --text-muted: #a3a3a3;
+  --bg: #f5f6f8;
+  --surface-1: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f2f4f7;
+  --sidebar: #fbfbfc;
+  --border: #e3e6eb;
+  --border-strong: #d0d5dd;
+  --text: #12161c;
+  --text-muted: #5b6472;
+  --ink: #12161c;
+  --on-ink: #ffffff;
 
   /* brand */
-  --brand: #76e021;
-  --brand-strong: #5fb814;
-  --brand-light: #a6f24d;
-  --brand-text: #76e021;
-  --on-brand: #0a1206;
-  --focus-ring: #76e021;
-  --accent: #a5b4fc;
+  --brand: #2f7d32;
+  --brand-strong: #256628;
+  --brand-text: #2f7d32;
+  --brand-tint: #edf6ee;
+  --on-brand: #ffffff;
+  --focus-ring: #2f7d32;
 
-  /* evidence states: glyph colour, text colour, tinted background */
-  --success: #00d294;
-  --success-text: #34d399;
-  --success-tint: #0f2a20;
-  --warning: #fcbb00;
-  --warning-text: #fbbf24;
-  --warning-tint: #2a2410;
-  --danger: #ff6568;
-  --danger-text: #f87171;
-  --danger-tint: #2c1314;
-  --neutral: #737373;
-  --neutral-text: #a3a3a3;
-  --neutral-tint: #1e1e1e;
-
-  /* window chrome dots */
-  --dot-red: #ff5f56;
-  --dot-amber: #ffbd2e;
-  --dot-green: #27c93f;
+  /* evidence and status: indicator colour, text colour, tinted background */
+  --success: #17b26a;
+  --success-text: #067647;
+  --success-tint: #ecfdf3;
+  --warning: #f79009;
+  --warning-text: #b54708;
+  --warning-tint: #fffaeb;
+  --danger: #f04438;
+  --danger-text: #b42318;
+  --danger-tint: #fef3f2;
+  --neutral: #98a2b3;
+  --neutral-text: #475467;
+  --neutral-tint: #f2f4f7;
 
   /* type */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --text-h1: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
-  --text-h2: clamp(1.125rem, 1rem + .5vw, 1.375rem);
-  --text-h3: 1rem;
-  --text-sm: .875rem;
+  --text-base: .875rem;
+  --text-sm: .8125rem;
   --text-xs: .75rem;
+  --text-doc: .9375rem;
 
   /* shape and space */
   --radius-md: .375rem;
   --radius-lg: .5rem;
-  --radius-xl: .75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
+  --radius-xl: .625rem;
+  --radius-2xl: .75rem;
   --radius-pill: 99px;
-  --radius-bubble: 1rem 1rem 1rem .25rem;
   --space-1: .25rem;
   --space-2: .5rem;
   --space-3: .75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
-  --shadow-card: 0 1px 0 rgb(255 255 255 / 4%) inset, 0 12px 32px rgb(0 0 0 / 35%);
-  --shadow-lift: 0 1px 0 rgb(255 255 255 / 6%) inset, 0 18px 48px rgb(0 0 0 / 45%);
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 5%);
+  --shadow-lift: 0 4px 8px -2px rgb(16 24 40 / 8%), 0 2px 4px -2px rgb(16 24 40 / 6%);
+  --shadow-dialog: 0 20px 24px -4px rgb(16 24 40 / 10%), 0 8px 8px -4px rgb(16 24 40 / 4%);
 
-  /* decoration */
-  --brand-glow: rgb(118 224 33 / 16%);
-  --accent-glow: rgb(99 102 241 / 18%);
-  --grid-line: rgb(255 255 255 / 3.5%);
-  --paper: #141414;
-  --skeleton: #1c1c1c;
-  --skeleton-shine: #262626;
+  /* layout */
+  --sidebar-width: 264px;
+  --toolbar-height: 56px;
+  --stepper-height: 44px;
+  --rail-width: 360px;
+
+  --skeleton: #eceef2;
+  --skeleton-shine: #f6f7f9;
   --ease-out: cubic-bezier(.16, 1, .3, 1);
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #fafafa;
-  --surface-1: #ffffff;
-  --surface-2: #ffffff;
-  --surface-3: #f5f5f5;
-  --border: #e5e5e5;
-  --border-strong: #d4d4d4;
-  --text: #171717;
-  --text-muted: #525252;
-  --brand-text: #2f6a08;
-  --focus-ring: #3f7d0e;
-  --accent: #4338ca;
-  --success-text: #047857;
-  --success-tint: #ecfdf5;
-  --warning-text: #92400e;
-  --warning-tint: #fffbeb;
-  --danger-text: #b91c1c;
-  --danger-tint: #fef2f2;
-  --neutral-text: #525252;
-  --neutral-tint: #f5f5f5;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 6%), 0 8px 24px rgb(0 0 0 / 6%);
-  --shadow-lift: 0 2px 4px rgb(0 0 0 / 6%), 0 16px 40px rgb(0 0 0 / 10%);
-  --brand-glow: rgb(118 224 33 / 22%);
-  --accent-glow: rgb(99 102 241 / 14%);
-  --grid-line: rgb(0 0 0 / 4%);
-  --paper: #ffffff;
-  --skeleton: #eeeeee;
-  --skeleton-shine: #f7f7f7;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111418;
+  --surface-1: #161a20;
+  --surface-2: #1b2027;
+  --surface-3: #222831;
+  --sidebar: #14181d;
+  --border: #2a313b;
+  --border-strong: #3a4350;
+  --text: #e6e9ee;
+  --text-muted: #9aa4b2;
+  --ink: #e6e9ee;
+  --on-ink: #111418;
+  --brand: #4caf50;
+  --brand-strong: #43a047;
+  --brand-text: #6cc070;
+  --brand-tint: #1c2a1e;
+  --on-brand: #0b1a0c;
+  --focus-ring: #6cc070;
+  --success: #3ccb7f;
+  --success-text: #5fd394;
+  --success-tint: #16281f;
+  --warning: #f5a524;
+  --warning-text: #f2b45a;
+  --warning-tint: #2b2416;
+  --danger: #f2655b;
+  --danger-text: #f58a82;
+  --danger-tint: #2d1a19;
+  --neutral: #6b7585;
+  --neutral-text: #a7b0bd;
+  --neutral-tint: #222831;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-lift: 0 6px 16px rgb(0 0 0 / 35%);
+  --shadow-dialog: 0 24px 48px rgb(0 0 0 / 50%);
+  --skeleton: #1f242c;
+  --skeleton-shine: #272d36;
 }
 
 /* The patient sheet is printed: always light, black text, no backgrounds. */
 @media print {
   :root,
-  :root[data-theme="light"] {
+  :root[data-theme="dark"] {
     color-scheme: light;
     --bg: #ffffff;
     --surface-1: #ffffff;

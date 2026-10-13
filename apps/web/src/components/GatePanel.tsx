@@ -51,7 +51,9 @@ export function GatePanel(props: {
         </span>
         <div>
           <p className="eyebrow">Safety gate</p>
-          <h2 id="gate-title">{summary.title}</h2>
+          <h2 id="gate-title" className="gate-title">
+            {summary.title}
+          </h2>
           <p className="muted gate-detail">{summary.detail}</p>
         </div>
       </div>

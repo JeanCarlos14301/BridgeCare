@@ -1,16 +1,9 @@
-/* Dual-pane citation inspector: layout, source window, citation map, highlight. */
+/* Review workspace: source viewer, fields pane, review rail. */
 
 .inspector {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
-  align-items: start;
-}
-
-.workspace-side {
-  display: grid;
-  gap: var(--space-4);
-  min-width: 0;
+  height: 100%;
+  min-height: 0;
 }
 
 /* `hidden` must win over the panes' own display values (inactive tab on small screens). */
@@ -18,111 +11,182 @@
   display: none;
 }
 
+.pane-fields,
+.pane-review {
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane-review {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg);
+}
+
+/* Wide desktop: three full-height columns, each with its own scroll. */
+@media (min-width: 1440px) {
+  .inspector {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) var(--rail-width);
+  }
+
+  .source-panel,
+  .pane-fields,
+  .pane-review {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .source-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .source-panel .window-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .pane-fields {
+    border-right: 1px solid var(--border);
+  }
+}
+
+/* Smaller desktop: the source stays pinned on the left; fields and review stack on the right and
+   scroll together. */
+@media (min-width: 1024px) and (max-width: 1439.98px) {
+  .inspector {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "source fields" "source review";
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    overflow-y: auto;
+  }
+
+  .source-panel {
+    grid-area: source;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--toolbar-height) - var(--stepper-height));
+  }
+
+  .pane-fields {
+    grid-area: fields;
+    min-height: auto;
+  }
+
+  .pane-review {
+    grid-area: review;
+    min-height: auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .pane-fields .fields-panel {
+    min-height: auto;
+  }
+
+  .source-panel .window-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
+/* Below 1024 px the panes are tabs (see CitationInspector). */
+@media (max-width: 1023.98px) {
+  .inspector {
+    height: auto;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .source-panel {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2xl);
+  }
+
+  .source-panel .window-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .pane-review {
+    padding: 0;
+  }
+}
+
 .inspector-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-1);
-  padding: var(--space-1);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 2px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--surface-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
 }
 
 .segment {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.5rem;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color .2s ease, color .2s ease;
 }
 
 .segment[aria-selected="true"] {
-  border-color: var(--border-strong);
-  background: var(--surface-3);
+  background: var(--surface-1);
   color: var(--text);
+  box-shadow: var(--shadow-card);
 }
 
-@media (max-width: 1023.98px) {
-  .source-panel .window-body {
-    max-height: 70vh;
-    overflow-y: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .inspector {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-6);
-  }
-
-  .source-panel {
-    position: sticky;
-    top: 4.75rem;
-  }
-
-  .source-panel .window-body {
-    max-height: calc(100vh - 12rem);
-    overflow-y: auto;
-  }
-}
-
-/* Window chrome around the source document */
+/* Source viewer */
 
 .window {
   min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
-  background: var(--surface-1);
-  box-shadow: var(--shadow-lift);
-  overflow: hidden;
-  animation: fade-up .55s var(--ease-out) both;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
 }
 
 .window-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.pane-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
   background: var(--surface-3);
-}
-
-.window-dots {
-  display: inline-flex;
-  gap: .4rem;
-}
-
-.window-dots span {
-  width: .7rem;
-  height: .7rem;
-  border-radius: 50%;
-  background: var(--dot-red);
-}
-
-.window-dots span:nth-child(2) {
-  background: var(--dot-amber);
-}
-
-.window-dots span:nth-child(3) {
-  background: var(--dot-green);
+  color: var(--text-muted);
 }
 
 .window-title {
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
   font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0;
+}
+
+.window-subtitle {
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .window-tools {
@@ -138,15 +202,15 @@
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--surface-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
 }
 
 .page-jump-button {
   min-width: 1.75rem;
-  height: 1.75rem;
+  height: 1.5rem;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
@@ -156,66 +220,68 @@
 }
 
 .page-jump-button:hover {
-  background: var(--surface-3);
+  background: var(--surface-1);
   color: var(--text);
-}
-
-.window-body {
-  padding: var(--space-4) var(--space-6) var(--space-6);
-  scroll-behavior: smooth;
 }
 
 .inspector-status {
   margin: var(--space-3) var(--space-4) 0;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-bubble);
-  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
 
 .inspector-status.is-missing {
-  border-color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+  background: var(--danger-tint);
   color: var(--danger-text);
+}
+
+.window-body {
+  padding: var(--space-3) var(--space-4) var(--space-6);
 }
 
 .source-document h3 {
   margin: var(--space-2) 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
+/* Each page reads like paper. */
 .source-page {
   position: relative;
-  margin-bottom: var(--space-4);
-  padding: var(--space-6) var(--space-6) var(--space-4);
+  margin: 0 auto var(--space-4);
+  max-width: 46rem;
+  padding: var(--space-8) var(--space-8) var(--space-6);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: var(--paper);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 3%) inset;
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-lift);
 }
 
 .source-page p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: .9375rem;
+  font-size: var(--text-doc);
   line-height: 1.75;
 }
 
 .page-label {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-3);
+  top: var(--space-3);
+  right: var(--space-4);
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-weight: 600;
 }
 
-.page-of {
-  opacity: .7;
-}
-
-/* Citation map: every located quote, faint, clickable with a pointer. */
+/* Citation map: every located quote, underlined; clickable with a pointer. */
 
 .trace {
   border-radius: var(--radius-md);
@@ -223,20 +289,20 @@
   text-decoration-thickness: 2px;
   text-underline-offset: .3em;
   cursor: pointer;
-  transition: background-color .2s ease;
+  transition: background-color .15s ease;
 }
 
 .trace-supported {
-  text-decoration-color: color-mix(in srgb, var(--success) 55%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--success) 60%, transparent);
 }
 
 .trace-ambiguous {
-  text-decoration-color: color-mix(in srgb, var(--warning) 70%, transparent);
+  text-decoration-color: var(--warning);
   text-decoration-style: dotted;
 }
 
 .trace-conflicting {
-  text-decoration-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  text-decoration-color: var(--danger);
   text-decoration-style: wavy;
 }
 
@@ -297,11 +363,7 @@ mark {
 }
 
 @media (max-width: 640px) {
-  .window-body {
-    padding: var(--space-3);
-  }
-
   .source-page {
-    padding: var(--space-6) var(--space-4) var(--space-3);
+    padding: var(--space-6) var(--space-4) var(--space-4);
   }
 }

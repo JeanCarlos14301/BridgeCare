@@ -1,37 +1,69 @@
-/* Patient sheet card and the printable sheet. */
+/* Patient sheet card in the review rail, the preview dialog, and the printed sheet. */
 
 .patient-head {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-3);
+}
+
+.patient-head .muted {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
 }
 
 .lock-badge {
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-  background: var(--surface-1);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
   color: var(--text-muted);
 }
 
 .patient-panel.is-unlocked .lock-badge {
-  border-color: var(--brand);
-  background: var(--brand-glow);
+  background: var(--brand-tint);
   color: var(--brand-text);
-  animation: unlock .6s var(--ease-out) both;
+  animation: unlock .5s var(--ease-out) both;
+}
+
+.sheet-dialog {
+  width: min(56rem, calc(100vw - 4rem));
+  max-height: calc(100vh - 4rem);
+  padding: 0;
+  overflow: hidden;
+}
+
+.sheet-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-3);
+}
+
+.sheet-dialog-bar .button-row {
+  margin: 0;
+}
+
+.sheet-dialog-title {
+  font-size: var(--text-sm);
+  font-weight: 650;
 }
 
 .printable {
-  margin-top: var(--space-4);
-  padding: var(--space-8);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: var(--paper);
-  animation: fade-up .5s var(--ease-out) both;
+  overflow-y: auto;
+  padding: var(--space-8) 3rem;
+  background: var(--surface-1);
+  font-size: .9375rem;
 }
 
 .sheet-header {
@@ -46,7 +78,7 @@
 
 .sheet-header h3 {
   font-size: 1.5rem;
-  letter-spacing: -.03em;
+  letter-spacing: -.02em;
 }
 
 .sheet-brand {
@@ -59,6 +91,11 @@
   font-weight: 700;
 }
 
+.sheet-brand .wordmark-mark {
+  width: 1rem;
+  height: 1rem;
+}
+
 .sheet-meta {
   color: var(--text-muted);
   font-size: var(--text-xs);
@@ -67,7 +104,7 @@
 
 .sheet-summary {
   margin-top: var(--space-4);
-  font-size: 1.0625rem;
+  font-size: 1rem;
 }
 
 .sheet-section {
@@ -81,7 +118,7 @@
   margin-bottom: var(--space-2);
   font-size: var(--text-sm);
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
 }
 
 .sheet-section ul {
@@ -96,7 +133,7 @@
 .sheet-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
 }
 
 .sheet-table th,
@@ -115,7 +152,7 @@
 }
 
 .sheet-table td:first-child {
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .sheet-notice {
@@ -133,7 +170,6 @@
   margin-top: .2rem;
 }
 
-/* Medication rows become labelled cards on small screens. */
 @media (max-width: 640px) {
   .printable {
     padding: var(--space-4);
@@ -178,20 +214,15 @@
 
 /* Print only the patient sheet. */
 @media print {
-  body {
-    background: #fff;
+  .app {
+    display: block;
+    height: auto;
+    overflow: visible;
   }
 
-  .backdrop,
-  .topbar,
   .skip-link,
   .toast-region {
     display: none !important;
-  }
-
-  /* Print width is below the tab breakpoint; the patient sheet must print whichever tab is open. */
-  .inspector .pane-fields {
-    display: block !important;
   }
 
   body * {
@@ -203,15 +234,27 @@
     visibility: visible;
   }
 
-  .printable {
+  .sheet-dialog,
+  .sheet-dialog[open] {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
+    display: block;
     width: 100%;
+    max-width: none;
+    max-height: none;
     margin: 0;
-    padding: 0;
     border: 0;
-    animation: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .sheet-dialog::backdrop {
+    display: none;
+  }
+
+  .printable {
+    padding: 0;
+    overflow: visible;
   }
 
   .sheet-header {

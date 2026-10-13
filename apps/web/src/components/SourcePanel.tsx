@@ -116,13 +116,14 @@ export function SourcePanel({
   return (
     <section {...section} className={`window source-panel ${className ?? ""}`} aria-labelledby="source-title">
       <div className="window-bar">
-        <span className="window-dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+        <span className="pane-icon" aria-hidden="true">
+          <Icon name="file" size={15} />
         </span>
         <h2 id="source-title" className="window-title">
           Source document
+          <span className="window-subtitle">
+            {totalPages} page{totalPages === 1 ? "" : "s"}
+          </span>
         </h2>
         <div className="window-tools">
           {totalPages > 1 && (

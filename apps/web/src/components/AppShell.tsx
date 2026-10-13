@@ -2,17 +2,17 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { Icon } from "./Icon";
 
-type Theme = "dark" | "light";
+type Theme = "light" | "dark";
 
 function storedTheme(): Theme {
   try {
-    return window.localStorage.getItem("bridgecare-theme") === "light" ? "light" : "dark";
+    return window.localStorage.getItem("bridgecare-theme") === "dark" ? "dark" : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
-function ThemeToggle() {
+export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(storedTheme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -22,48 +22,55 @@ function ThemeToggle() {
       // Storage can be unavailable (private mode); the theme still applies for this visit.
     }
   }, [theme]);
-  const light = theme === "light";
+  const dark = theme === "dark";
   return (
     <button
       type="button"
       className="icon-button"
-      aria-pressed={light}
-      aria-label="Light theme"
-      title={light ? "Switch to dark theme" : "Switch to light theme"}
-      onClick={() => setTheme(light ? "dark" : "light")}
+      aria-pressed={dark}
+      aria-label="Dark theme"
+      title={dark ? "Switch to light theme" : "Switch to dark theme"}
+      onClick={() => setTheme(dark ? "light" : "dark")}
     >
-      <Icon name={light ? "sun" : "moon"} size={18} />
+      <Icon name={dark ? "moon" : "sun"} size={16} />
     </button>
   );
 }
 
-export function AppShell(props: { status: ReactNode; session: ReactNode; children: ReactNode }) {
+/**
+ * Desktop app frame: a fixed sidebar, a toolbar, an optional status strip, and a workspace that
+ * fills the rest of the window. Panes inside the workspace scroll on their own.
+ */
+export function AppShell(props: {
+  sidebar: ReactNode;
+  sidebarFooter: ReactNode;
+  toolbar: ReactNode;
+  strip?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <>
-      <div className="backdrop" aria-hidden="true">
-        <span className="glow glow-brand" />
-        <span className="glow glow-accent" />
-      </div>
+    <div className="app">
       <a className="skip-link" href="#workspace">
         Skip to workspace
       </a>
-      <header className="topbar">
-        <div className="topbar-inner">
-          <p className="wordmark">
-            <span className="wordmark-mark" aria-hidden="true" />
-            BridgeCare
-            <span className="wordmark-tag">Discharge review</span>
-          </p>
-          <div className="topbar-actions">
-            {props.status}
-            <ThemeToggle />
-            {props.session}
+      <aside className="sidebar" aria-label="Documents and session">
+        <div className="sidebar-brand">
+          <span className="wordmark-mark" aria-hidden="true" />
+          <div>
+            <p className="wordmark">BridgeCare</p>
+            <p className="wordmark-tag">Discharge review</p>
           </div>
         </div>
-      </header>
-      <main id="workspace" className="page" tabIndex={-1}>
-        {props.children}
-      </main>
-    </>
+        <div className="sidebar-scroll">{props.sidebar}</div>
+        <div className="sidebar-footer">{props.sidebarFooter}</div>
+      </aside>
+      <div className="main">
+        <header className="toolbar">{props.toolbar}</header>
+        {props.strip}
+        <main id="workspace" className="workspace" tabIndex={-1}>
+          {props.children}
+        </main>
+      </div>
+    </div>
   );
 }

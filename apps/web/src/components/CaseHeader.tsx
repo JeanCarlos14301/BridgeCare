@@ -10,28 +10,36 @@ const STATUS: Record<CaseView["status"], { icon: IconName; label: string; tone: 
   failed: { icon: "alert", label: "Failed", tone: "danger" },
 };
 
+/** Toolbar content for the open case: title, status, and the revision being reviewed. */
 export function CaseHeader({ caseView, title }: { caseView: CaseView; title: string | null }) {
   const status = STATUS[caseView.status];
   const revision = caseView.revision;
   return (
     <div className="case-header">
       <div className="case-title">
-        <p className="eyebrow">Current case</p>
-        <h2>{title ?? caseView.fixture_id}</h2>
-      </div>
-      <div className="case-badges">
+        <h1>{title ?? caseView.fixture_id}</h1>
         <span key={caseView.status} className={`status status-${status.tone}`}>
-          <Icon name={status.icon} size={14} />
+          <Icon name={status.icon} size={13} />
           Status: {status.label}
         </span>
         {caseView.failure_reason && <code className="code-chip">{caseView.failure_reason}</code>}
-        {revision && (
-          <span className="muted case-meta">
-            Revision {revision.number} · {revision.origin === "model" ? "model output" : "reviewer edit"} ·{" "}
-            prompt {revision.prompt_version}
-          </span>
-        )}
       </div>
+      {revision && (
+        <dl className="case-meta">
+          <div>
+            <dt>Revision</dt>
+            <dd>{revision.number}</dd>
+          </div>
+          <div>
+            <dt>Origin</dt>
+            <dd>{revision.origin === "model" ? "Model output" : "Reviewer edit"}</dd>
+          </div>
+          <div>
+            <dt>Prompt</dt>
+            <dd>{revision.prompt_version}</dd>
+          </div>
+        </dl>
+      )}
     </div>
   );
 }
