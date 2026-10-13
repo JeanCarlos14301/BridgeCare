@@ -167,6 +167,10 @@ For `expected.json`, `expected_block_reasons` uses gate codes, and `expected_out
 - A review targets `revision_id` and `content_hash`. It succeeds only if both match the current revision, in one transaction.
 - Editing a draft or reprocessing after approval returns the case to `needs_review` and invalidates the previous approval.
 - Every case belongs to the session that created it (`sessions.id`). Other sessions receive 404.
+- **Review timing**: When a reviewer loads a case in `needs_review` via `GET /cases/{id}`, the server records `review_opened_at` (if not already recorded for that revision). Upon `POST /cases/{id}/review`, `review.duration_ms` is computed from `opened_at` to submission time. If `opened_at` was not recorded, `opened_at` and `duration_ms` are set to `null` to avoid artificial review duration inflation.
+- **Visitor quota and rate limiting**: To protect provider budget during public hackathon demonstrations, visitor sessions are constrained on `POST /cases/{id}/process`:
+  - Lifetime cap: Maximum 3 processings per visitor session (HTTP 429 `visitor_processing_limit_exceeded`).
+  - Global rate limit: Maximum 10 processings per minute sliding window across all visitor sessions (HTTP 429 `visitor_rate_limit_exceeded`).
 
 ## 5. HTTP API v0
 
@@ -178,10 +182,11 @@ All paths are under the API root (the browser uses `/api/...`). Session endpoint
 | `POST /cases/from-fixture` | any session | Body `{ "fixture_id" }`; 201 with the case |
 | `GET /cases` | any session | Cases of the current session |
 | `GET /cases/{id}` | owner | Case with current revision, source pages, fields, gate, review |
-| `POST /cases/{id}/process` | owner | Runs extraction; 409 if already processing |
+| `POST /cases/{id}/process` | owner | Runs extraction; 409 if already processing; 429 if visitor quota or rate limit exceeded |
 | `PATCH /cases/{id}/draft` | reviewer owner | New revision from edited fields; back to `needs_review` |
 | `POST /cases/{id}/review` | reviewer owner | Body `{ revision_id, content_hash, decision: approve or reject, resolution_note }`; 409 if stale or blocked |
-| `GET /cases/{id}/patient-view` | owner | Printable view; 409 unless the current revision has a valid approval |
+| `GET /cases/{id}/preview` | reviewer owner | Pre-approval patient view preview; supports `?lang=en\|es` (default `en`); 409 if no revision exists |
+| `GET /cases/{id}/patient-view` | owner | Printable view; supports `?lang=en\|es` (default `en`); 409 unless the current revision has a valid approval |
 | `DELETE /cases/{id}` | owner | 204 |
 | `POST /cases/upload` | reviewer, `ALLOW_UPLOADS=true` only | Not in the first slice |
 
