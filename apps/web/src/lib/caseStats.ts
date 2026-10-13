@@ -91,7 +91,21 @@ export function pageCount(caseView: CaseView): number {
 }
 
 export function formatDuration(ms: number): string {
-  return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
+  if (ms < 1000) return `${Math.round(ms)} ms`;
+  if (ms < 60_000) return `${(ms / 1000).toFixed(1)} s`;
+  const seconds = Math.round(ms / 1000);
+  return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
+/**
+ * Fields a reviewer must look at: anything not plainly supported, plus any field the gate names.
+ */
+export function attentionKeys(fields: FieldRef[], gate: Gate): Set<string> {
+  const keys = new Set(fields.filter((field) => field.state !== "supported").map((field) => field.key));
+  for (const reason of gate.blocking_reasons) {
+    if (reason.field) keys.add(fieldKeyOf(reason.field));
+  }
+  return keys;
 }
 
 export function shortHash(value: string, length = 10): string {

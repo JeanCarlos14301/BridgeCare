@@ -196,6 +196,64 @@ Gates: lint 0, typecheck 0, tests 0 (27/27 in 6 files), build 0, no line > 120, 
 header): reviewer flow end to end at 1920x1080 and 1440x900 with no console errors; 1100, 1280 and
 1366 px checked for overlap (none) and horizontal scroll (none); dark theme checked.
 
+## Organised review view, print fix, and B-11 / Spanish sheet integration
+
+Branch: `feat/ui-organize` from `main` at `70bbdd6` (after PRs #11, #12, #13).
+
+- Fields pane opens on "Needs attention" (fields not plainly supported, plus any field a gate
+  reason names) with a toggle to "All fields" and a per-state count line. Selecting a hidden
+  field from the citation map or a gate reason switches to "All fields".
+- Review rail reduced from five blocks to two: one review card (gate summary, reasons with
+  "Go to field", automated checks collapsed with a pass count, decision form) and the patient
+  sheet card. The overview tiles were removed; their figures already appear in the pipeline
+  strip, the field filter, and the toolbar (processing time, review time).
+- B-11: the server only starts the review timer when a reviewer reads `GET /cases/{id}`, which
+  the UI never called. It now reads the case after processing as a reviewer and after logging in
+  with a case open (a failed read keeps the processed case on screen). The decision shows the
+  server-measured review time or "Not measured for this revision".
+- Spanish sheet: English / Español toggle on the approved sheet (`?lang=`); reviewers get
+  "Preview before approval" (`/preview?lang=`) with a warning banner and no print option; a
+  preview is also excluded by the print CSS. Fixed sheet labels come from a static dictionary;
+  every value comes from the API. The Spanish labels need a check by a Spanish reader.
+- 429 on processing shows the server's quota message.
+- Print bug: the sheet printed 4 pages for one page of content because the hidden app kept its
+  layout height. The dialog is now rendered into `<body>` and, while it is open, every other child
+  of `<body>` is `display: none` in print. Measured with `Page.printToPDF` in headless Edge:
+  before 4 pages, after 1 page (English and Spanish); a print-media screenshot shows the sheet.
+
+Gates: lint 0, typecheck 0, tests 0 (37/37 in 8 files), build 0, no line > 120, no
+`dangerouslySetInnerHTML`, no absolute URLs in source. Browser (production build with the nginx CSP
+header, mock): reviewer flow with "Needs attention" showing 3 of 7 fields on fx04, Spanish preview
+without print, approval showing a server-measured review time, no console errors.
+
+Observation for the API owner: untranslated phrases in the Spanish view are returned in English
+with an "[en]" marker (for example "Fainting [en]").
+
+## Faster document switching
+
+Same branch `feat/ui-organize`, rebased onto `main` at `b2d7b50` (PRs #14 and #15: AMD evidence
+pill, eval timing, prompt v3). Conflicts in `App.tsx` and `ReviewBar.tsx` were resolved by keeping
+both sides: the `X-Request-ID` capture and inference host for the AMD pill, plus the review-timer
+read and 429 handling; the review time added in `ReviewBar` is shown in the decision facts.
+
+The user reported close to a minute of waiting when moving between documents. With the live AMD
+provider, the API log showed `POST /cases/{id}/process` taking 14.1 s, 22.7 s, and 27.9 s (n = 3),
+and every click on a document created and processed a new case, even when that document had
+already been processed in the session.
+
+- The UI lists this session's cases (`GET /cases`) on load and after login (login carries cases
+  over) and keeps the newest reusable case per document (`needs_review`, `approved`, `rejected`).
+  Opening such a document reads the case (`GET /cases/{id}`) instead of calling the model. Failed
+  cases are not reused. Logout clears the list.
+- "Run again" in the toolbar processes the open document on purpose; its tooltip says each run uses
+  the shared model quota.
+- While the model runs, the toolbar and the sidebar show the elapsed seconds; processed documents
+  carry a check mark in the sidebar. The toolbar shows the scenario description of the open case.
+- Measured in headless Edge with the mock provider: reopening an already processed document took
+  42 ms. Two new tests fail if the sidebar goes back to processing on every click.
+
+Gates: lint 0, typecheck 0, tests 0 (40/40 in 9 files), build 0, no line > 120.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of

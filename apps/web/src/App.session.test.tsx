@@ -143,3 +143,91 @@ describe("provider pill", () => {
     view.root.unmount();
   });
 });
+
+describe("server measurements and limits", () => {
+  it("shows the server's quota message when processing returns 429", async () => {
+    stubApi({
+      ...baseRoutes,
+      "POST /session": () => json({ role: "visitor" }),
+      "POST /cases/case-1/process": () =>
+        json({ detail: "Visitor processing limit reached (maximum 3 runs per session)." }, 429),
+    });
+    const view = await renderApp();
+    await act(async () => button(view.node, "Provider timeout").click());
+    expect(view.node.textContent).toContain("Visitor processing limit reached (maximum 3 runs per session).");
+    view.root.unmount();
+  });
+
+  it("reads the processed case as a reviewer so the server starts the review timer", async () => {
+    const needsReview: CaseView = { ...failedCase, status: "needs_review", failure_reason: null };
+    const calls = stubApi({
+      ...baseRoutes,
+      "POST /cases/case-1/process": () => json(needsReview),
+      "GET /cases/case-1": () => json(needsReview),
+    });
+    const view = await renderApp();
+    await act(async () => button(view.node, "Provider timeout").click());
+    expect(calls).toContain("GET /cases/case-1");
+    expect(calls.indexOf("GET /cases/case-1")).toBeGreaterThan(calls.indexOf("POST /cases/case-1/process"));
+    view.root.unmount();
+  });
+});
+
+describe("reusing processed cases", () => {
+  const caseFor = (fixtureId: string, caseId: string): CaseView => ({
+    ...failedCase,
+    case_id: caseId,
+    fixture_id: fixtureId,
+    status: "needs_review",
+    failure_reason: null,
+  });
+  const twoFixtures: Route = () =>
+    json([
+      { id: "fx_a", title: "Document A", scenario: "clear", description: "" },
+      { id: "fx_b", title: "Document B", scenario: "clear", description: "" },
+    ]);
+  const routes = (): Record<string, Route> => ({
+    ...baseRoutes,
+    "POST /session": () => json({ role: "visitor" }),
+    "GET /fixtures": twoFixtures,
+    "POST /cases/from-fixture": (init) => {
+      const fixtureId = JSON.parse(String(init?.body)).fixture_id as string;
+      return json(caseFor(fixtureId, fixtureId === "fx_a" ? "case-a" : "case-b"));
+    },
+    "POST /cases/case-a/process": () => json(caseFor("fx_a", "case-a")),
+    "POST /cases/case-b/process": () => json(caseFor("fx_b", "case-b")),
+    "GET /cases/case-a": () => json(caseFor("fx_a", "case-a")),
+  });
+
+  it("reopens a document already processed in this session without calling the model again", async () => {
+    const calls = stubApi(routes());
+    const view = await renderApp();
+    await act(async () => button(view.node, "Document A").click());
+    await act(async () => button(view.node, "Document B").click());
+    await act(async () => button(view.node, "Document A").click());
+
+    expect(calls.filter((call) => call === "POST /cases/case-a/process")).toHaveLength(1);
+    expect(calls.filter((call) => call === "POST /cases/from-fixture")).toHaveLength(2);
+    expect(calls.at(-1)).toBe("GET /cases/case-a");
+    expect(view.node.querySelector(".case-title h1")?.textContent).toBe("Document A");
+    view.root.unmount();
+  });
+
+  it("restores this session's processed cases on load and can still run the model again", async () => {
+    const calls = stubApi({
+      ...routes(),
+      "GET /cases": () =>
+        json([{ case_id: "case-a", fixture_id: "fx_a", status: "approved", updated_at: "2026-10-13T00:00:00Z" }]),
+    });
+    const view = await renderApp();
+    await act(async () => button(view.node, "Document A").click());
+    expect(calls).not.toContain("POST /cases/from-fixture");
+    expect(calls).toContain("GET /cases/case-a");
+
+    await act(async () => button(view.node, "Run again").click());
+    expect(calls).toContain("POST /cases/from-fixture");
+    expect(calls).toContain("POST /cases/case-a/process");
+    view.root.unmount();
+  });
+});
+

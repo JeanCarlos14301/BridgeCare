@@ -169,6 +169,31 @@
   font-size: var(--text-sm);
 }
 
+.case-name {
+  display: grid;
+  min-width: 0;
+}
+
+.case-description {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.case-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+}
+
+.elapsed {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Empty state */
 
 .empty-state {

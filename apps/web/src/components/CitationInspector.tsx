@@ -1,8 +1,8 @@
 import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Revision, SourceDocument } from "../api";
-import { listFields } from "../lib/caseStats";
-import { FieldsPanel } from "./FieldsPanel";
+import { attentionKeys, listFields } from "../lib/caseStats";
+import { type FieldFilter, FieldsPanel } from "./FieldsPanel";
 import { GatePanel } from "./GatePanel";
 import { chipId, type SelectField, type Selection } from "./selection";
 import { SourcePanel } from "./SourcePanel";
@@ -52,7 +52,7 @@ export function CitationInspector(props: {
   documents: SourceDocument[];
   revision: Revision;
   approved?: boolean;
-  railTop?: ReactNode;
+  decision?: ReactNode;
   after?: ReactNode;
 }) {
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -61,6 +61,12 @@ export function CitationInspector(props: {
   const flashTimer = useRef<number | undefined>(undefined);
   const wide = useIsWide();
   const fields = useMemo(() => listFields(props.revision), [props.revision]);
+  const attention = useMemo(() => attentionKeys(fields, props.revision.gate), [fields, props.revision.gate]);
+  // Open on what needs a decision; when nothing does, show everything.
+  const [filter, setFilter] = useState<FieldFilter>(() => (attention.size ? "attention" : "all"));
+  const ensureVisible = (fieldKey: string) => {
+    if (!attention.has(fieldKey)) setFilter("all");
+  };
 
   useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
@@ -87,6 +93,7 @@ export function CitationInspector(props: {
 
   const selectQuietly = (fieldKey: string, index: number) => {
     const field = fields.find((candidate) => candidate.key === fieldKey);
+    ensureVisible(fieldKey);
     if (!field?.citations[index]) return;
     setSelection((current) => ({
       fieldKey,
@@ -188,16 +195,26 @@ export function CitationInspector(props: {
         {...paneProps("source")}
       />
       <div id="pane-fields" className="inspector-pane pane-fields" {...paneProps("fields")}>
-        <FieldsPanel revision={props.revision} selection={selection} flashKey={flashKey} onSelect={select} />
+        <FieldsPanel
+          revision={props.revision}
+          selection={selection}
+          flashKey={flashKey}
+          attention={attention}
+          filter={filter}
+          onFilterChange={setFilter}
+          onSelect={select}
+        />
       </div>
       <div id="pane-review" className="inspector-pane pane-review" {...paneProps("review")}>
-        {props.railTop}
-        <GatePanel
-          gate={props.revision.gate}
-          approved={props.approved}
-          fieldLabel={labelOf}
-          onGoToField={goToField}
-        />
+        <div className="card review-card">
+          <GatePanel
+            gate={props.revision.gate}
+            approved={props.approved}
+            fieldLabel={labelOf}
+            onGoToField={goToField}
+          />
+          {props.decision}
+        </div>
         {props.after}
       </div>
     </div>

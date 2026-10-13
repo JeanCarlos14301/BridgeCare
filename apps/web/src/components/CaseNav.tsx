@@ -20,8 +20,10 @@ const STATUS_LABEL: Partial<Record<CaseView["status"], string>> = {
 export function CaseNav(props: {
   fixtures: Fixture[];
   activeId: string | null;
-  activeStatus: CaseView["status"] | null;
+  statuses: Partial<Record<string, CaseView["status"]>>;
   processingId: string | null;
+  openingId: string | null;
+  elapsedSeconds: number;
   onPick: (fixtureId: string) => void;
 }) {
   return (
@@ -41,16 +43,22 @@ export function CaseNav(props: {
             const scenario = SCENARIO[fixture.scenario];
             const active = fixture.id === props.activeId;
             const processing = props.processingId === fixture.id;
-            const status = active && props.activeStatus ? STATUS_LABEL[props.activeStatus] : undefined;
-            const meta = processing ? "Processing…" : (status ?? scenario.label);
+            const opening = props.openingId === fixture.id;
+            const known = props.statuses[fixture.id];
+            const status = known ? STATUS_LABEL[known] : undefined;
+            const meta = processing
+              ? `Processing… ${props.elapsedSeconds} s`
+              : opening
+                ? "Opening…"
+                : (status ?? scenario.label);
             return (
               <li key={fixture.id}>
                 <button
                   type="button"
                   className={`nav-item tone-${scenario.tone}`}
                   aria-pressed={active}
-                  aria-busy={processing}
-                  disabled={props.processingId !== null}
+                  aria-busy={processing || opening}
+                  disabled={props.processingId !== null || props.openingId !== null}
                   title={fixture.description}
                   onClick={() => props.onPick(fixture.id)}
                 >
@@ -63,7 +71,12 @@ export function CaseNav(props: {
                       {String(index + 1).padStart(2, "0")} · {meta}
                     </span>
                   </span>
-                  {processing && <span className="spinner" aria-hidden="true" />}
+                  {(processing || opening) && <span className="spinner" aria-hidden="true" />}
+                  {!processing && !opening && known && (
+                    <span className="nav-ready" title="Already processed in this session; opens without the model">
+                      <Icon name="check" size={12} />
+                    </span>
+                  )}
                 </button>
               </li>
             );

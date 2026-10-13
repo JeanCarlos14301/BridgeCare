@@ -8,6 +8,7 @@ export type Citation = Schemas["Citation"];
 export type BlockingReason = Schemas["BlockingReason"];
 export type EvidenceState = Schemas["Medication"]["evidence_state"];
 export type Fixture = Schemas["FixtureSummary"];
+export type CaseSummary = Schemas["CaseSummary"];
 export type Gate = Schemas["Gate"];
 export type PatientView = Schemas["PatientView"];
 export type ProviderMode = Schemas["HealthResponse"]["provider_mode"];
@@ -46,4 +47,16 @@ export function postJson<T>(path: string, body: unknown): Promise<T> {
 
 export function isConflict(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409;
+}
+
+/** The server's `detail` text for a domain error (e.g. a 429 quota message), if it sent one. */
+export function errorDetail(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null;
+  try {
+    const body: unknown = JSON.parse(error.message);
+    if (body && typeof body === "object" && "detail" in body && typeof body.detail === "string") return body.detail;
+  } catch {
+    // Not JSON; fall through.
+  }
+  return null;
 }

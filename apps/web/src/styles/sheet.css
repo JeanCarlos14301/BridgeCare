@@ -54,9 +54,16 @@
   margin: 0;
 }
 
-.sheet-dialog-title {
+.preview-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--warning) 40%, var(--border));
+  background: var(--warning-tint);
+  color: var(--warning-text);
   font-size: var(--text-sm);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .printable {
@@ -212,40 +219,46 @@
   }
 }
 
-/* Print only the patient sheet. */
+/* Print only the patient sheet.
+   The sheet dialog is rendered straight into <body>, so while it is open every other child of
+   <body> (the whole app) is removed from layout. Hiding it with `visibility` instead kept its
+   height and printed extra blank pages. A preview is never printed. */
 @media print {
-  .app {
-    display: block;
-    height: auto;
-    overflow: visible;
+  @page {
+    margin: 16mm;
   }
 
-  .skip-link,
-  .toast-region {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff;
+  }
+
+  body:has(> .sheet-dialog[open]) > :not(.sheet-dialog) {
     display: none !important;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  .printable,
-  .printable * {
-    visibility: visible;
   }
 
   .sheet-dialog,
   .sheet-dialog[open] {
-    position: absolute;
-    inset: 0;
+    position: static;
+    inset: auto;
     display: block;
-    width: 100%;
+    width: auto;
     max-width: none;
     max-height: none;
     margin: 0;
+    padding: 0;
     border: 0;
     box-shadow: none;
     overflow: visible;
+    animation: none;
+  }
+
+  .sheet-dialog.is-preview,
+  .sheet-dialog-bar,
+  .preview-banner {
+    display: none !important;
   }
 
   .sheet-dialog::backdrop {
@@ -255,6 +268,12 @@
   .printable {
     padding: 0;
     overflow: visible;
+    animation: none;
+  }
+
+  .sheet-section,
+  .sheet-table tr {
+    break-inside: avoid;
   }
 
   .sheet-header {

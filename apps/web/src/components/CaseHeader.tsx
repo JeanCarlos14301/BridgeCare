@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
+
 import type { CaseView } from "../api";
+import { formatDuration } from "../lib/caseStats";
 import { Icon, type IconName } from "./Icon";
 
 const STATUS: Record<CaseView["status"], { icon: IconName; label: string; tone: string }> = {
@@ -11,13 +14,26 @@ const STATUS: Record<CaseView["status"], { icon: IconName; label: string; tone: 
 };
 
 /** Toolbar content for the open case: title, status, and the revision being reviewed. */
-export function CaseHeader({ caseView, title }: { caseView: CaseView; title: string | null }) {
+export function CaseHeader({
+  caseView,
+  title,
+  description = null,
+  actions,
+}: {
+  caseView: CaseView;
+  title: string | null;
+  description?: string | null;
+  actions?: ReactNode;
+}) {
   const status = STATUS[caseView.status];
   const revision = caseView.revision;
   return (
     <div className="case-header">
       <div className="case-title">
-        <h1>{title ?? caseView.fixture_id}</h1>
+        <div className="case-name">
+          <h1>{title ?? caseView.fixture_id}</h1>
+          {description && <p className="case-description">{description}</p>}
+        </div>
         <span key={caseView.status} className={`status status-${status.tone}`}>
           <Icon name={status.icon} size={13} />
           Status: {status.label}
@@ -31,15 +47,22 @@ export function CaseHeader({ caseView, title }: { caseView: CaseView; title: str
             <dd>{revision.number}</dd>
           </div>
           <div>
-            <dt>Origin</dt>
-            <dd>{revision.origin === "model" ? "Model output" : "Reviewer edit"}</dd>
-          </div>
-          <div>
             <dt>Prompt</dt>
             <dd>{revision.prompt_version}</dd>
           </div>
+          <div>
+            <dt>Processing</dt>
+            <dd>{formatDuration(revision.timings.total_ms)}</dd>
+          </div>
+          {caseView.review?.revision_id === revision.revision_id && caseView.review.duration_ms != null && (
+            <div>
+              <dt>Review time</dt>
+              <dd>{formatDuration(caseView.review.duration_ms)}</dd>
+            </div>
+          )}
         </dl>
       )}
+      {actions && <div className="case-actions">{actions}</div>}
     </div>
   );
 }

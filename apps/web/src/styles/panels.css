@@ -18,20 +18,130 @@
   }
 }
 
-.fields-panel > h2 {
+.fields-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.fields-head h2 {
   font-size: 1rem;
 }
 
-.hint {
-  margin-top: var(--space-1);
+/* Segmented filter, also used for the sheet language. */
+.filter,
+.language-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
+}
+
+.filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 1.875rem;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
   font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-option:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.filter-option[aria-pressed="true"] {
+  background: var(--surface-1);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+}
+
+.filter-count {
+  min-width: 1.25rem;
+  padding: 0 .35rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.filter-option[aria-pressed="true"] .filter-count {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.state-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: 0 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+  list-style: none;
+  font-size: var(--text-xs);
+}
+
+.state-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 600;
+}
+
+.state-count-supported {
+  color: var(--success-text);
+}
+
+.state-count-ambiguous {
+  color: var(--warning-text);
+}
+
+.state-count-conflicting {
+  color: var(--danger-text);
+}
+
+.state-count-missing {
+  color: var(--neutral-text);
+}
+
+.fields-empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--border));
+  border-radius: var(--radius-xl);
+  background: var(--success-tint);
+  color: var(--success-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.fields-tip {
+  margin-top: var(--space-6);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: var(--space-6) 0 var(--space-2);
+  margin: var(--space-5) 0 var(--space-2);
   color: var(--text-muted);
   font-size: var(--text-xs);
   font-weight: 650;
@@ -327,11 +437,34 @@
 
 /* Gate */
 
+/* One card holds the gate and the decision; its top edge carries the gate tone. */
+.review-card {
+  display: grid;
+  gap: var(--space-4);
+  border-top: 3px solid var(--success);
+}
+
+.review-card:has(.gate-warn) {
+  border-top-color: var(--warning);
+}
+
+.review-card:has(.gate-blocked) {
+  border-top-color: var(--danger);
+}
+
+.section-heading {
+  font-size: var(--text-sm);
+}
+
+.review-bar {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
 .gate {
   --gate: var(--success);
   --gate-text: var(--success-text);
   --gate-tint: var(--success-tint);
-  border-top: 3px solid var(--gate);
 }
 
 .gate-warn {
@@ -375,6 +508,42 @@
 .gate-detail {
   margin-top: var(--space-1);
   font-size: var(--text-sm);
+}
+
+.checks {
+  margin-top: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.checks summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checks-score {
+  margin-left: auto;
+  color: var(--danger-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.checks-score.is-pass {
+  color: var(--success-text);
+}
+
+.checks[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.checks .checklist {
+  margin: 0;
+  padding: var(--space-2);
 }
 
 .checklist {
@@ -465,58 +634,13 @@
 
 .reason-go {
   justify-self: start;
-  margin-left: calc(var(--space-3) * -1);
-  color: var(--text);
+}
+
+.reason-message {
+  font-weight: 600;
 }
 
 /* Reviewer decision */
-
-.review-steps {
-  display: grid;
-  gap: var(--space-2);
-  margin: var(--space-3) 0 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: step;
-  font-size: var(--text-sm);
-}
-
-.review-steps li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  counter-increment: step;
-}
-
-.review-steps li::before {
-  content: counter(step);
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  font-family: var(--font-mono);
-  font-size: .6875rem;
-}
-
-.review-steps .is-current {
-  color: var(--text);
-}
-
-.review-steps .is-current::before {
-  border-color: var(--ink);
-  color: var(--text);
-}
-
-.review-steps .is-done::before {
-  content: "✓";
-  border-color: color-mix(in srgb, var(--success) 50%, transparent);
-  background: var(--success-tint);
-  color: var(--success-text);
-}
 
 .note-count {
   margin-top: var(--space-1);
@@ -570,7 +694,27 @@
   color: var(--danger-text);
 }
 
-.decision-meta,
+.decision-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+
+.decision-facts div {
+  display: contents;
+}
+
+.decision-facts dt {
+  color: var(--text-muted);
+}
+
+.decision-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
 .decision-note {
   margin: var(--space-1) 0;
   font-size: var(--text-sm);
