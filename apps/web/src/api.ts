@@ -8,6 +8,7 @@ export type Citation = Schemas["Citation"];
 export type BlockingReason = Schemas["BlockingReason"];
 export type EvidenceState = Schemas["Medication"]["evidence_state"];
 export type Fixture = Schemas["FixtureSummary"];
+export type CaseSummary = Schemas["CaseSummary"];
 export type Gate = Schemas["Gate"];
 export type PatientView = Schemas["PatientView"];
 export type ProviderMode = Schemas["HealthResponse"]["provider_mode"];

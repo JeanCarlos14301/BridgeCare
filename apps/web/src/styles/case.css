@@ -98,6 +98,18 @@
   font-size: var(--text-xs);
 }
 
+.nav-ready {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success-tint);
+  color: var(--success-text);
+}
+
 .nav-skeleton {
   display: grid;
   gap: var(--space-3);

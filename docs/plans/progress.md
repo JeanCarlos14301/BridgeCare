@@ -229,6 +229,31 @@ without print, approval showing a server-measured review time, no console errors
 Observation for the API owner: untranslated phrases in the Spanish view are returned in English
 with an "[en]" marker (for example "Fainting [en]").
 
+## Faster document switching
+
+Same branch `feat/ui-organize`, rebased onto `main` at `b2d7b50` (PRs #14 and #15: AMD evidence
+pill, eval timing, prompt v3). Conflicts in `App.tsx` and `ReviewBar.tsx` were resolved by keeping
+both sides: the `X-Request-ID` capture and inference host for the AMD pill, plus the review-timer
+read and 429 handling; the review time added in `ReviewBar` is shown in the decision facts.
+
+The user reported close to a minute of waiting when moving between documents. With the live AMD
+provider, the API log showed `POST /cases/{id}/process` taking 14.1 s, 22.7 s, and 27.9 s (n = 3),
+and every click on a document created and processed a new case, even when that document had
+already been processed in the session.
+
+- The UI lists this session's cases (`GET /cases`) on load and after login (login carries cases
+  over) and keeps the newest reusable case per document (`needs_review`, `approved`, `rejected`).
+  Opening such a document reads the case (`GET /cases/{id}`) instead of calling the model. Failed
+  cases are not reused. Logout clears the list.
+- "Run again" in the toolbar processes the open document on purpose; its tooltip says each run uses
+  the shared model quota.
+- While the model runs, the toolbar and the sidebar show the elapsed seconds; processed documents
+  carry a check mark in the sidebar. The toolbar shows the scenario description of the open case.
+- Measured in headless Edge with the mock provider: reopening an already processed document took
+  42 ms. Two new tests fail if the sidebar goes back to processing on every click.
+
+Gates: lint 0, typecheck 0, tests 0 (40/40 in 9 files), build 0, no line > 120.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of
