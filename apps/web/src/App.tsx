@@ -4,6 +4,7 @@ import {
   api,
   type CaseView,
   type Fixture,
+  type Health,
   isConflict,
   postJson,
   type ProviderMode,
@@ -27,6 +28,9 @@ type Session = { role: Role };
 
 export default function App() {
   const [providerMode, setProviderMode] = useState<ProviderMode | null>(null);
+  const [inferenceHost, setInferenceHost] = useState<string | null>(null);
+  // X-Request-ID of the processing call, shown as AMD evidence for the demo (B-12.3).
+  const [requestId, setRequestId] = useState<string | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [caseView, setCaseView] = useState<CaseView | null>(null);
   const [role, setRole] = useState<Role>("visitor");
@@ -46,8 +50,11 @@ export default function App() {
 
   useEffect(() => {
     // The MOCK badge must be visible before any case is processed (B-12.1).
-    api<{ provider_mode: ProviderMode }>("/health")
-      .then((health) => setProviderMode(health.provider_mode))
+    api<Health>("/health")
+      .then((health) => {
+        setProviderMode(health.provider_mode);
+        setInferenceHost(health.inference_host ?? null);
+      })
       .catch(() => setProviderMode(null));
     // The fixture list needs the session cookie, so it waits for the session to exist.
     api<Session>("/session", { method: "POST" })
@@ -63,11 +70,16 @@ export default function App() {
     setBusy(true);
     setProcessingId(fixtureId);
     setCaseView(null);
+    setRequestId(null);
     setToast(null);
     try {
       const created = await postJson<CaseView>("/cases/from-fixture", { fixture_id: fixtureId });
-      const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" });
+      let processRequestId: string | null = null;
+      const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" }, (headers) => {
+        processRequestId = headers.get("X-Request-ID");
+      });
       if (epoch !== sessionEpoch.current) return;
+      setRequestId(processRequestId);
       setCaseView(processed);
       setResolutionNote("");
       if (processed.status === "failed") notify("Processing failed visibly; nothing was approved.", "error");
@@ -98,6 +110,7 @@ export default function App() {
     // request fails; the role only drops to visitor once the server has revoked the session.
     sessionEpoch.current += 1;
     setCaseView(null);
+    setRequestId(null);
     setResolutionNote("");
     setBusy(false);
     setProcessingId(null);
@@ -162,7 +175,12 @@ export default function App() {
 
   const sidebarFooter = (
     <>
-      <ProviderPill mode={providerMode ?? revision?.provider_mode ?? null} revision={revision} />
+      <ProviderPill
+        mode={providerMode ?? revision?.provider_mode ?? null}
+        host={inferenceHost}
+        revision={revision}
+        requestId={requestId}
+      />
       <div className="session-row">
         {role === "reviewer" ? (
           <>

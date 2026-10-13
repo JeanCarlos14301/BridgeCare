@@ -1,6 +1,7 @@
 import asyncio
 import random
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -34,6 +35,7 @@ class OpenAICompatibleProvider(LLMProvider):
         self, settings: Settings, transport: httpx.AsyncBaseTransport | None = None
     ) -> None:
         self.base_url = settings.llm_base_url.rstrip("/")
+        self.host = urlparse(self.base_url).hostname
         self.api_key = settings.llm_api_key.get_secret_value()
         self.model = settings.llm_model
         self.timeout = settings.llm_timeout_seconds

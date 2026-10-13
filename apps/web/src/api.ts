@@ -23,8 +23,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+export type Health = Schemas["HealthResponse"];
+
+export async function api<T>(path: string, init?: RequestInit, onHeaders?: (headers: Headers) => void): Promise<T> {
   const response = await fetch(`/api${path}`, { credentials: "same-origin", ...init });
+  onHeaders?.(response.headers);
   if (!response.ok) {
     const body = await response.text();
     throw new ApiError(response.status, body || `Request failed with status ${response.status}`);

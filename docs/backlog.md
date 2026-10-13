@@ -2,7 +2,7 @@
 
 The vertical slice runs end to end with the mock provider (fixture -> extraction -> validation -> review -> printable view). Each section below is a reviewable issue with acceptance criteria.
 
-## Status (2026-10-12)
+## Status (2026-10-13)
 
 | Item | Status | Owner |
 | --- | --- | --- |
@@ -15,10 +15,10 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-06 Domain API | Done except `POST /cases/upload` | Daniel |
 | B-07 Review UI | First version; gaps in B-12 | Edgar |
 | B-08 Safety tests | Done for the backend (72 tests) | Daniel |
-| B-09 Evaluation report | Harness done; mock-only numbers so far | Felipe |
-| B-10 Real inference on AMD Token Factory | Code ready; waiting for the team key | Felipe |
-| B-11 Review time measurement | Not started | Daniel |
-| B-12 UI completion | Not started | Edgar |
+| B-09 Evaluation report | Harness reports provider, latency medians and time from `eval/baseline.json`; real-provider report and manual baseline runs pending | Felipe |
+| B-10 Real inference on AMD Token Factory | Done for one case on the Azure VM (`DeepSeek-V4-Flash`, `extraction-v2`); full fixture eval pending | Felipe |
+| B-11 Review time measurement | Backend done (`review.duration_ms`); UI shows review time | Daniel |
+| B-12 UI completion | Items 1, 2, 3, 4, 5, 6 done; 7 (draft editing) and the Spanish toggle pending | Edgar |
 | B-13 Public HTTPS deployment | Done: Azure VM live with real AMD inference (15/15 checks); Cloudflare tunnel as backup | Jean |
 | B-14 Demo video, slides and submission | Not started | Edgar and Jean |
 

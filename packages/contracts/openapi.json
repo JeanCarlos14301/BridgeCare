@@ -449,6 +449,17 @@
       },
       "HealthResponse": {
         "properties": {
+          "inference_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inference Host"
+          },
           "provider_mode": {
             "enum": [
               "mock",

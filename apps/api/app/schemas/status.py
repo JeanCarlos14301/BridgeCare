@@ -8,6 +8,7 @@ from app.providers.base import ProviderMode
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     provider_mode: ProviderMode
+    inference_host: str | None = None
 
 
 class ReadyResponse(BaseModel):

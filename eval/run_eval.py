@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import statistics
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "fixtures" / "discharge"
 DEFAULT_REPORTS = Path(__file__).resolve().parent / "reports"
+DEFAULT_BASELINE = Path(__file__).resolve().parent / "baseline.json"
 MEDICATION_FIELDS = ("name", "dose", "unit", "route", "frequency", "duration")
 
 
@@ -35,6 +37,36 @@ def ratio(numerator: int, denominator: int) -> dict[str, int | float | None]:
     }
 
 
+def median_summary(values: list[float]) -> dict[str, float | int | None]:
+    return {"n": len(values), "median": round(statistics.median(values), 2) if values else None}
+
+
+def time_summary(baseline: dict[str, Any], processing_ms: list[float]) -> dict[str, Any]:
+    """Combine measured processing time with human-recorded runs from baseline.json.
+
+    Assisted time = median processing + median review. Saving is reported only when both
+    manual and assisted medians come from measured runs; nothing is estimated.
+    """
+    runs = baseline.get("runs", [])
+    manual = [float(run["seconds"]) for run in runs if run.get("mode") == "manual"]
+    review = [float(run["seconds"]) for run in runs if run.get("mode") == "assisted_review"]
+    processing_s = [ms / 1000 for ms in processing_ms]
+    summary: dict[str, Any] = {
+        "manual_s": median_summary(manual),
+        "assisted_review_s": median_summary(review),
+        "processing_s": median_summary(processing_s),
+        "assisted_total_s": None,
+        "saving_percent": None,
+    }
+    if review and processing_s:
+        assisted = summary["assisted_review_s"]["median"] + summary["processing_s"]["median"]
+        summary["assisted_total_s"] = round(assisted, 2)
+        if manual:
+            manual_median = summary["manual_s"]["median"]
+            summary["saving_percent"] = round(100 * (manual_median - assisted) / manual_median, 2)
+    return summary
+
+
 def expected_outcome_matches(case: dict[str, Any], expected: dict[str, Any]) -> bool:
     outcome = expected["expected_outcome"]
     if outcome == "failed":
@@ -48,7 +80,7 @@ def expected_outcome_matches(case: dict[str, Any], expected: dict[str, Any]) -> 
     return gate["requires_resolution_note"]
 
 
-def run(base_url: str) -> dict[str, Any]:
+def run(base_url: str, baseline: dict[str, Any]) -> dict[str, Any]:
     password = os.environ.get("REVIEWER_PASSWORD")
     errors: list[str] = []
     if not password:
@@ -61,6 +93,8 @@ def run(base_url: str) -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
     end_to_end_ms: list[float] = []
     model_ms: list[float] = []
+    total_ms: list[float] = []
+    providers: set[tuple[str, str, str]] = set()
 
     with httpx.Client(base_url=base_url.rstrip("/"), timeout=150.0) as client:  # real model calls take ~25 s; matches nginx
         session = client.post("/session")
@@ -122,7 +156,14 @@ def run(base_url: str) -> dict[str, Any]:
                 errors.extend(result["errors"])
                 cases.append(result)
                 continue
+            result["provider_mode"] = revision.get("provider_mode")
+            result["model"] = revision.get("model")
+            result["prompt_version"] = revision.get("prompt_version")
+            providers.add((str(revision.get("provider_mode")), str(revision.get("model")), str(revision.get("prompt_version"))))
             timings = revision.get("timings")
+            if isinstance(timings, dict) and isinstance(timings.get("total_ms"), (int, float)):
+                result["processing_ms"] = timings["total_ms"]
+                total_ms.append(float(timings["total_ms"]))
             if isinstance(timings, dict) and isinstance(timings.get("model_ms"), (int, float)):
                 result["model_latency_ms"] = timings["model_ms"]
                 model_ms.append(float(timings["model_ms"]))
@@ -164,6 +205,10 @@ def run(base_url: str) -> dict[str, Any]:
         "base_url": base_url,
         "generated_at": datetime.now(UTC).isoformat(),
         "errors": errors,
+        "providers": [
+            {"provider_mode": mode, "model": model, "prompt_version": prompt}
+            for mode, model, prompt in sorted(providers)
+        ],
         "cases": cases,
         "metrics": {
             "medication_field_fidelity": {field: ratio(**values) for field, values in metrics.items()},
@@ -173,12 +218,26 @@ def run(base_url: str) -> dict[str, Any]:
             "forbidden_substrings": forbidden,
             "end_to_end_latency_ms": end_to_end_ms,
             "model_latency_ms": model_ms,
+            "processing_ms": total_ms,
+            "latency_median_ms": {
+                "end_to_end": median_summary(end_to_end_ms),
+                "model": median_summary(model_ms),
+                "processing": median_summary(total_ms),
+            },
+            "time": time_summary(baseline, total_ms),
         },
     }
 
 
 def markdown(report: dict[str, Any]) -> str:
     lines = ["# BridgeCare evaluation report", "", f"Base URL: `{report['base_url']}`", ""]
+    for provider in report.get("providers", []):
+        label = provider["provider_mode"]
+        if label == "mock":
+            label += " (replays recorded responses; not model accuracy)"
+        lines.append(f"- Provider: {label}; model `{provider['model']}`; prompt `{provider['prompt_version']}`")
+    if report.get("providers"):
+        lines.append("")
     metrics = report.get("metrics", {})
     if metrics:
         lines += ["## Results", "", "| Measure | Result |", "| --- | --- |"]
@@ -189,6 +248,19 @@ def markdown(report: dict[str, Any]) -> str:
             lines.append(f"| {name.replace('_', ' ')} | {value['numerator']}/{value['denominator']} |")
         forbidden = metrics["forbidden_substrings"]
         lines.append(f"| Forbidden substrings found | {forbidden['found']}/{forbidden['checked']} |")
+        for name, value in metrics["latency_median_ms"].items():
+            lines.append(f"| Median {name} latency (ms) | {value['median']} (n={value['n']}) |")
+        time = metrics["time"]
+        lines += ["", "## Time per case (seconds)", "", "| Measure | Median | n |", "| --- | --- | --- |"]
+        for name in ("manual_s", "assisted_review_s", "processing_s"):
+            value = time[name]
+            lines.append(f"| {name.removesuffix('_s').replace('_', ' ')} | {value['median']} | {value['n']} |")
+        lines.append(f"| assisted total (processing + review) | {time['assisted_total_s']} | |")
+        if time["saving_percent"] is None:
+            lines.append("")
+            lines.append("Saving not reported: needs measured manual and assisted review runs in `eval/baseline.json`.")
+        else:
+            lines.append(f"| saving vs manual (%) | {time['saving_percent']} | |")
     if report.get("errors"):
         lines += ["", "## Errors", ""] + [f"- {error}" for error in report["errors"]]
     return "\n".join(lines) + "\n"
@@ -198,8 +270,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_REPORTS)
+    parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     args = parser.parse_args()
-    report = run(args.base_url)
+    baseline = load_json(args.baseline) if args.baseline.exists() else {"runs": []}
+    report = run(args.base_url, baseline)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     (args.output_dir / f"{stamp}.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

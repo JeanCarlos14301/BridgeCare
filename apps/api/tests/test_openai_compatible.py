@@ -115,3 +115,8 @@ async def test_ready_requires_the_model_in_the_catalog() -> None:
     ready, detail = await _provider(listed(["Other-Model"])).ready()
     assert ready is False
     assert "catalog" in detail
+
+
+def test_host_is_hostname_only() -> None:
+    provider = _provider(lambda request: httpx.Response(200))
+    assert provider.host == "provider.test"
