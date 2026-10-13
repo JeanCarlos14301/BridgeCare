@@ -1542,6 +1542,68 @@
         ]
       }
     },
+    "/cases/{case_id}/preview": {
+      "get": {
+        "operationId": "preview_patient_view_cases__case_id__preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "enum": [
+                "en",
+                "es"
+              ],
+              "title": "Lang",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Case not found for this session"
+          },
+          "409": {
+            "description": "Conflict with the current case state"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Patient View",
+        "tags": [
+          "cases"
+        ]
+      }
+    },
     "/cases/{case_id}/process": {
       "post": {
         "operationId": "process_case_cases__case_id__process_post",

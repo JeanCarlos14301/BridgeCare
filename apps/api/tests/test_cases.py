@@ -1,3 +1,4 @@
+import time
 from typing import Any
 
 import pytest
@@ -345,6 +346,19 @@ def test_review_records_duration_and_opened_at(client: TestClient) -> None:
     assert isinstance(review["duration_ms"], (int, float))
     assert review["duration_ms"] >= 0.0
 
+def test_review_without_opening_leaves_duration_and_opened_at_null(
+    client: TestClient,
+) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    # Directly review without calling GET /cases/{id}
+    approved = _review(client, case)
+    assert approved.status_code == 200
+    review = approved.json()["review"]
+    assert review is not None
+    assert review["opened_at"] is None
+    assert review["duration_ms"] is None
+
 
 def test_visitor_processing_burst_rate_limit(client: TestClient) -> None:
     client.post("/session")
@@ -368,33 +382,76 @@ def test_visitor_processing_lifetime_cap(client: TestClient) -> None:
     client.post("/session")
     case = _create(client, "fx01_clear")
 
-    # Simulate visitor having already used 5 processing runs in their session
+    # Simulate visitor having already used 3 processing runs in their session
     service = client.app.state.case_service  # type: ignore[attr-defined]
     client.get("/cases")
-    # Populate visitor processings with 5 runs in the past
-    for _sess_id in list(service._visitor_processings.keys()) or ["fallback"]:
-        service._visitor_processings[_sess_id] = [0.0, 0.0, 0.0, 0.0, 0.0]
-
-    # Find the current visitor's session id from db
     factory = client.app.state.db_sessions  # type: ignore[attr-defined]
     with factory() as db:
         visitor_session_id = db.execute(
             text("SELECT session_id FROM cases WHERE id = :id"), {"id": case["case_id"]}
         ).scalar_one()
-    service._visitor_processings[visitor_session_id] = [0.0, 0.0, 0.0, 0.0, 0.0]
+    service._visitor_processings[visitor_session_id] = [0.0, 0.0, 0.0]
 
     res = client.post(f"/cases/{case['case_id']}/process")
     assert res.status_code == 429
-    assert "maximum 5 runs per session" in res.json()["detail"]
+    assert "maximum 3 runs per session" in res.json()["detail"]
+
+
+def test_global_visitor_processing_rate_limit(client: TestClient) -> None:
+    client.post("/session")
+    service = client.app.state.case_service  # type: ignore[attr-defined]
+    # Simulate 10 global visitor processings in the current sliding window
+    now = time.monotonic()
+    service._global_visitor_processings = [now] * 10
+
+    case = _create(client, "fx01_clear")
+    res = client.post(f"/cases/{case['case_id']}/process")
+    assert res.status_code == 429
+    assert "Global visitor processing limit reached" in res.json()["detail"]
 
 
 def test_reviewers_are_exempt_from_visitor_quota(client: TestClient) -> None:
     _login(client)
     # Reviewer can process multiple cases without hitting visitor limits
-    for _ in range(3):
+    for _ in range(4):
         case = _create(client, "fx01_clear")
         res = client.post(f"/cases/{case['case_id']}/process")
         assert res.status_code == 200
+
+
+# --- Reviewer preview & localization ---
+
+
+def test_preview_patient_view_before_approval(client: TestClient) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    case_id = case["case_id"]
+    # Case is still in needs_review (not approved)
+    assert case["status"] == "needs_review"
+
+    # Regular patient-view is blocked with 409
+    assert client.get(f"/cases/{case_id}/patient-view").status_code == 409
+
+    # Reviewer preview works before approval in English
+    preview_en = client.get(f"/cases/{case_id}/preview").json()
+    assert preview_en["language"] == "en"
+    assert preview_en["medications"][0]["name"] == "Amoxicillin"
+    assert preview_en["medications"][0]["route"] == "by mouth"
+
+    # Reviewer preview works before approval in Spanish
+    preview_es = client.get(f"/cases/{case_id}/preview?lang=es").json()
+    assert preview_es["language"] == "es"
+    assert preview_es["medications"][0]["name"] == "Amoxicillin"
+    assert preview_es["medications"][0]["route"] == "vía oral"
+    assert "preparada con asistencia de IA" in preview_es["notice"]
+
+
+def test_preview_requires_reviewer_role(client: TestClient) -> None:
+    client.post("/session")
+    case = _create(client, "fx01_clear")
+    # Visitor cannot preview
+    res = client.get(f"/cases/{case['case_id']}/preview")
+    assert res.status_code in (401, 403)
 
 
 # --- Spanish patient view localization ---
@@ -433,3 +490,40 @@ def test_patient_view_spanish_localization(client: TestClient) -> None:
     # Check activity & diet
     assert view_es["activity"] == "Descanse en casa durante 3 días."
     assert view_es["diet"] == "Sin restricciones."
+
+
+def test_patient_view_spanish_preserves_untranslated_clinical_instructions(
+    client: TestClient,
+) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    fields = dict(case["revision"]["extracted_fields"])
+    fields["follow_up"] = [
+        {
+            "instruction": "Cardiology follow-up in 2 weeks for echocardiogram review",
+            "timeframe": "in 2 weeks",
+            "evidence_state": "missing",
+            "citations": [],
+        }
+    ]
+    patch_res = client.patch(
+        f"/cases/{case['case_id']}/draft",
+        json={
+            "revision_id": case["revision"]["revision_id"],
+            "content_hash": case["revision"]["content_hash"],
+            "extracted_fields": fields,
+            "patient_draft": case["revision"]["patient_draft"],
+        },
+    )
+    assert patch_res.status_code == 200
+    updated_case = patch_res.json()
+    _review(client, updated_case)
+
+    view_es = client.get(f"/cases/{case['case_id']}/patient-view?lang=es").json()
+    # Check that cardiology & echocardiogram details are NOT replaced with generic primary care text
+    follow_up_es = view_es["follow_up"][0]["instruction"]
+    assert "Cardiology" in follow_up_es
+    assert "echocardiogram" in follow_up_es
+    assert "[en]" in follow_up_es
+    assert view_es["follow_up"][0]["timeframe"] == "en 2 semanas"
+

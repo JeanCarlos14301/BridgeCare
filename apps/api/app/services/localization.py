@@ -40,12 +40,25 @@ FREQUENCY_MAP_ES: dict[str, str] = {
     "every 6 hours as needed": "cada 6 horas según sea necesario",
     "every 8 hours": "cada 8 horas",
     "every 8 hours as needed": "cada 8 horas según sea necesario",
+    "every 8 hours as needed for pain": "cada 8 horas según sea necesario para el dolor",
     "every 12 hours": "cada 12 horas",
     "every 24 hours": "cada 24 horas",
     "at bedtime": "al acostarse",
     "with meals": "con las comidas",
     "before meals": "antes de las comidas",
     "as needed": "según sea necesario",
+}
+
+INSTRUCTION_MAP_ES: dict[str, str] = {
+    "see your primary care clinician": (
+        "Consulte a su médico o profesional de atención primaria"
+    ),
+    "arrange follow-up with your primary care clinician": (
+        "Coordine una cita de seguimiento con su médico de atención primaria"
+    ),
+    "follow up with your primary care clinician": (
+        "Consulte a su médico de atención primaria para seguimiento"
+    ),
 }
 
 WARNING_SIGNS_MAP_ES: dict[str, str] = {
@@ -96,6 +109,9 @@ SUMMARY_MAP_ES: dict[str, str] = {
         "Tome los medicamentos según lo prescrito y asista a sus visitas de seguimiento "
         "programadas."
     ),
+    "you are going home. rest and watch for the warning signs below.": (
+        "Usted va a casa. Descanse y preste atención a los signos de alarma que se indican abajo."
+    ),
 }
 
 
@@ -105,8 +121,11 @@ def _translate_duration(text: str | None) -> str | None:
     cleaned = text.strip()
     lowered = cleaned.lower()
 
-    # Common regex replacements
     duration_patterns = [
+        (r"\bfor\s+(\d+)\s*days?\b", r"por \1 días"),
+        (r"\bfor\s+(\d+)\s*weeks?\b", r"por \1 semanas"),
+        (r"\bfor\s+(\d+)\s*months?\b", r"por \1 meses"),
+        (r"\bfor\s+(\d+)\s*hours?\b", r"por \1 horas"),
         (r"\b(\d+)\s*days?\b", r"\1 días"),
         (r"\b(\d+)\s*weeks?\b", r"\1 semanas"),
         (r"\b(\d+)\s*months?\b", r"\1 meses"),
@@ -118,7 +137,7 @@ def _translate_duration(text: str | None) -> str | None:
 
     if translated != lowered:
         return translated
-    return cleaned
+    return f"{cleaned} [en]"
 
 
 def _translate_timeframe(text: str | None) -> str | None:
@@ -133,6 +152,7 @@ def _translate_timeframe(text: str | None) -> str | None:
         (r"\bwithin\s+(\d+)\s*months?\b", r"dentro de \1 meses"),
         (r"\bin\s+(\d+)\s*days?\b", r"en \1 días"),
         (r"\bin\s+(\d+)\s*weeks?\b", r"en \1 semanas"),
+        (r"\bin\s+(\d+)\s*months?\b", r"en \1 meses"),
     ]
     translated = lowered
     for pattern, repl in timeframe_patterns:
@@ -140,7 +160,7 @@ def _translate_timeframe(text: str | None) -> str | None:
 
     if translated != lowered:
         return translated
-    return cleaned
+    return f"{cleaned} [en]"
 
 
 def _translate_instruction(text: str | None) -> str | None:
@@ -149,21 +169,18 @@ def _translate_instruction(text: str | None) -> str | None:
     cleaned = text.strip()
     lowered = cleaned.lower()
 
-    if (
-        "primary care clinician" in lowered
-        or "primary care physician" in lowered
-        or "pcp" in lowered
-    ):
-        return "Consulte o programe una cita con su médico o profesional de atención primaria"
-    if "follow-up" in lowered or "follow up" in lowered:
-        return "Coordine una cita de seguimiento con su equipo de atención médica"
-    return cleaned
+    # Exact standard match without losing specific clinician details
+    if lowered in INSTRUCTION_MAP_ES:
+        return INSTRUCTION_MAP_ES[lowered]
+    # Keep full instruction text intact to avoid clinical omission
+    return f"{cleaned} [en]"
 
 
 def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -> PatientView:
     """Safely localize patient-facing discharge sheet to Spanish or English.
 
     Preserves exact clinical medication names, numeric doses, and units without alteration.
+    Explicitly marks any untranslated text with '[en]' rather than omitting clinical details.
     """
     if target_lang != "es":
         return view.model_copy(update={"language": "en"})
@@ -172,10 +189,18 @@ def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -
     for med in view.medications:
         # Route localization
         route_key = med.route.lower().strip() if med.route else None
-        route_es = ROUTE_MAP_ES.get(route_key, med.route) if route_key else None
+        if route_key:
+            route_es = ROUTE_MAP_ES.get(route_key, f"{med.route} [en]")
+        else:
+            route_es = None
+
         # Frequency localization
         freq_key = med.frequency.lower().strip() if med.frequency else None
-        freq_es = FREQUENCY_MAP_ES.get(freq_key, med.frequency) if freq_key else None
+        if freq_key:
+            freq_es = FREQUENCY_MAP_ES.get(freq_key, f"{med.frequency} [en]")
+        else:
+            freq_es = None
+
         # Duration localization
         duration_es = _translate_duration(med.duration)
 
@@ -202,27 +227,28 @@ def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -
     localized_warning_signs: list[str] = []
     for sign in view.warning_signs:
         sign_cleaned = sign.strip()
-        sign_es = WARNING_SIGNS_MAP_ES.get(sign_cleaned.lower(), sign_cleaned)
+        sign_es = WARNING_SIGNS_MAP_ES.get(sign_cleaned.lower(), f"{sign_cleaned} [en]")
         localized_warning_signs.append(sign_es)
 
     # Activity & Diet
-    activity_es = (
-        ACTIVITY_MAP_ES.get(view.activity.strip().lower(), view.activity)
-        if view.activity
-        else None
-    )
-    diet_es = (
-        DIET_MAP_ES.get(view.diet.strip().lower(), view.diet)
-        if view.diet
-        else None
-    )
+    if view.activity:
+        activity_key = view.activity.strip().lower()
+        activity_es = ACTIVITY_MAP_ES.get(activity_key, f"{view.activity} [en]")
+    else:
+        activity_es = None
+
+    if view.diet:
+        diet_key = view.diet.strip().lower()
+        diet_es = DIET_MAP_ES.get(diet_key, f"{view.diet} [en]")
+    else:
+        diet_es = None
 
     # Summary
-    summary_es = (
-        SUMMARY_MAP_ES.get(view.summary.strip().lower(), view.summary)
-        if view.summary
-        else None
-    )
+    if view.summary:
+        summary_key = view.summary.strip().lower()
+        summary_es = SUMMARY_MAP_ES.get(summary_key, f"{view.summary} [en]")
+    else:
+        summary_es = None
 
     return PatientView(
         case_id=view.case_id,

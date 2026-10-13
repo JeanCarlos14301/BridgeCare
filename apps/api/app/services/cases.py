@@ -41,8 +41,9 @@ from app.services.validation import (
 )
 
 MIN_RESOLUTION_NOTE = 10
-MAX_VISITOR_PROCESSINGS_PER_SESSION = 5
+MAX_VISITOR_PROCESSINGS_PER_SESSION = 3
 MAX_VISITOR_PROCESSINGS_PER_MINUTE = 2
+MAX_GLOBAL_VISITOR_PROCESSINGS_PER_MINUTE = 10
 VISITOR_RATE_WINDOW_SECONDS = 60.0
 PATIENT_NOTICE = (
     "This sheet was prepared with AI assistance and approved by a care team reviewer. "
@@ -111,15 +112,26 @@ class CaseService:
         self._processing = asyncio.Lock()
         # Track processing timestamps per visitor session to protect Token Factory quota.
         self._visitor_processings: dict[str, list[float]] = {}
+        self._global_visitor_processings: list[float] = []
 
     def _check_and_record_visitor_processing(self, session: SessionInfo) -> None:
         if session.role != "visitor":
             return
         now = time.monotonic()
+        cutoff = now - VISITOR_RATE_WINDOW_SECONDS
+        self._global_visitor_processings = [
+            t for t in self._global_visitor_processings if t > cutoff
+        ]
+        if len(self._global_visitor_processings) >= MAX_GLOBAL_VISITOR_PROCESSINGS_PER_MINUTE:
+            raise DomainError(
+                "Global visitor processing limit reached to protect API quota. "
+                "Please wait a moment or log in as a reviewer.",
+                status_code=429,
+            )
         history = self._visitor_processings.setdefault(session.id, [])
         if len(history) >= MAX_VISITOR_PROCESSINGS_PER_SESSION:
             raise DomainError(
-                "Visitor processing limit reached (maximum 5 runs per session). "
+                "Visitor processing limit reached (maximum 3 runs per session). "
                 "Please log in as a reviewer for unlimited access.",
                 status_code=429,
             )
@@ -130,6 +142,7 @@ class CaseService:
                 status_code=429,
             )
         history.append(now)
+        self._global_visitor_processings.append(now)
 
     def record_review_opened(
         self, db: Session, case: CaseRow, reviewer: SessionInfo
@@ -467,14 +480,17 @@ class CaseService:
             text("SELECT opened_at FROM review_timers WHERE revision_id = :revision_id"),
             {"revision_id": revision.id},
         ).mappings().one_or_none()
-        opened_at_str = (
-            timer_row["opened_at"]
-            if timer_row is not None and timer_row["opened_at"]
-            else revision.created_at
-        )
-        opened_dt = datetime.fromisoformat(opened_at_str)
-        now_dt = datetime.fromisoformat(now)
-        duration_ms = max(round((now_dt - opened_dt).total_seconds() * 1000, 2), 0.0)
+        opened_at_raw = timer_row["opened_at"] if timer_row is not None else None
+        if isinstance(opened_at_raw, str):
+            opened_at_str: str | None = opened_at_raw
+            opened_dt = datetime.fromisoformat(opened_at_raw)
+            now_dt = datetime.fromisoformat(now)
+            duration_ms: float | None = max(
+                round((now_dt - opened_dt).total_seconds() * 1000, 2), 0.0
+            )
+        else:
+            opened_at_str = None
+            duration_ms = None
 
         updated = _rowcount(db.execute(
             text(
@@ -508,29 +524,15 @@ class CaseService:
         )
         db.commit()
 
-    def patient_view(
-        self, db: Session, case: CaseRow, lang: Literal["en", "es"] = "en"
+    def _build_patient_view(
+        self, case: CaseRow, revision: RevisionRow, approved_at: datetime
     ) -> PatientView:
-        revision = self._revision(db, case.current_revision_id)
-        review = self._latest_review(db, case.current_revision_id)
-        if (
-            case.status != "approved"
-            or revision is None
-            or review is None
-            or review.decision != "approve"
-            or review.revision_id != revision.id
-            or review.content_hash != revision.content_hash
-        ):
-            raise DomainError(
-                "Patient view requires an approved current revision", status_code=409
-            )
         fields = ExtractedFields.model_validate(revision.content["extracted_fields"])
-        # Rendered only from validated fields; no model prose reaches the medication table.
-        view = PatientView(
+        return PatientView(
             case_id=case.id,
             revision_id=revision.id,
             content_hash=revision.content_hash,
-            approved_at=review.reviewed_at,
+            approved_at=approved_at,
             provider_mode=revision.content["provider_mode"],
             language="en",
             summary=revision.content["patient_draft"].get("summary"),
@@ -553,6 +555,37 @@ class CaseService:
             activity=fields.activity.text,
             diet=fields.diet.text,
             notice=PATIENT_NOTICE,
+        )
+
+    def patient_view(
+        self, db: Session, case: CaseRow, lang: Literal["en", "es"] = "en"
+    ) -> PatientView:
+        revision = self._revision(db, case.current_revision_id)
+        review = self._latest_review(db, case.current_revision_id)
+        if (
+            case.status != "approved"
+            or revision is None
+            or review is None
+            or review.decision != "approve"
+            or review.revision_id != revision.id
+            or review.content_hash != revision.content_hash
+        ):
+            raise DomainError(
+                "Patient view requires an approved current revision", status_code=409
+            )
+        view = self._build_patient_view(case, revision, review.reviewed_at)
+        if lang == "es":
+            return localize_patient_view(view, "es")
+        return view
+
+    def preview_patient_view(
+        self, db: Session, case: CaseRow, lang: Literal["en", "es"] = "en"
+    ) -> PatientView:
+        revision = self._revision(db, case.current_revision_id)
+        if revision is None:
+            raise DomainError("Case has no revision to preview", status_code=409)
+        view = self._build_patient_view(
+            case, revision, datetime.fromisoformat(case.updated_at)
         )
         if lang == "es":
             return localize_patient_view(view, "es")

@@ -131,6 +131,20 @@ async def read_patient_view(
     return service.patient_view(db, _owned(service, db, current, case_id), lang=lang)
 
 
+@router.get(
+    "/cases/{case_id}/preview", response_model=PatientView, responses=NOT_FOUND | CONFLICT
+)
+async def preview_patient_view(
+    case_id: str,
+    service: Service,
+    db: DbSession,
+    reviewer: ReviewerSession,
+    lang: Literal["en", "es"] = "en",
+) -> PatientView:
+    return service.preview_patient_view(db, _owned(service, db, reviewer, case_id), lang=lang)
+
+
+
 @router.delete(
     "/cases/{case_id}",
     status_code=status.HTTP_204_NO_CONTENT,
