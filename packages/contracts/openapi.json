@@ -760,6 +760,15 @@
             "title": "Follow Up",
             "type": "array"
           },
+          "language": {
+            "default": "en",
+            "enum": [
+              "en",
+              "es"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
           "medications": {
             "items": {
               "$ref": "#/components/schemas/PatientMedicationRow"
@@ -863,6 +872,29 @@
             ],
             "title": "Decision",
             "type": "string"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
           },
           "resolution_note": {
             "anyOf": [
@@ -1460,6 +1492,20 @@
               "title": "Case Id",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "enum": [
+                "en",
+                "es"
+              ],
+              "title": "Lang",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1536,6 +1582,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "description": "Visitor processing limit or rate limit exceeded"
           }
         },
         "summary": "Process Case",

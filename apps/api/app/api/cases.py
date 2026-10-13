@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Request, Response, status
 
@@ -27,6 +27,9 @@ CONFLICT: dict[int | str, dict[str, Any]] = {
 }
 NOT_FOUND: dict[int | str, dict[str, Any]] = {
     404: {"description": "Case not found for this session"}
+}
+TOO_MANY_REQUESTS: dict[int | str, dict[str, Any]] = {
+    429: {"description": "Visitor processing limit or rate limit exceeded"}
 }
 
 
@@ -72,15 +75,22 @@ async def list_cases(service: Service, db: DbSession, current: CurrentSession) -
 async def read_case(
     case_id: str, service: Service, db: DbSession, current: CurrentSession
 ) -> CaseView:
-    return service.view(db, _owned(service, db, current, case_id))
+    case = _owned(service, db, current, case_id)
+    if current.role == "reviewer":
+        service.record_review_opened(db, case, current)
+    return service.view(db, case)
 
 
-@router.post("/cases/{case_id}/process", response_model=CaseView, responses=NOT_FOUND | CONFLICT)
+@router.post(
+    "/cases/{case_id}/process",
+    response_model=CaseView,
+    responses=NOT_FOUND | CONFLICT | TOO_MANY_REQUESTS,
+)
 async def process_case(
     case_id: str, service: Service, db: DbSession, current: CurrentSession
 ) -> CaseView:
     case = _owned(service, db, current, case_id)
-    await service.process(db, case)
+    await service.process(db, case, current)
     return service.view(db, _owned(service, db, current, case_id))
 
 
@@ -112,9 +122,13 @@ async def review_case(
     "/cases/{case_id}/patient-view", response_model=PatientView, responses=NOT_FOUND | CONFLICT
 )
 async def read_patient_view(
-    case_id: str, service: Service, db: DbSession, current: CurrentSession
+    case_id: str,
+    service: Service,
+    db: DbSession,
+    current: CurrentSession,
+    lang: Literal["en", "es"] = "en",
 ) -> PatientView:
-    return service.patient_view(db, _owned(service, db, current, case_id))
+    return service.patient_view(db, _owned(service, db, current, case_id), lang=lang)
 
 
 @router.delete(

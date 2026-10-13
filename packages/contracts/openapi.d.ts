@@ -484,6 +484,12 @@ export interface components {
             diet: string | null;
             /** Follow Up */
             follow_up: components["schemas"]["PatientFollowUp"][];
+            /**
+             * Language
+             * @default en
+             * @enum {string}
+             */
+            language: "en" | "es";
             /** Medications */
             medications: components["schemas"]["PatientMedicationRow"][];
             /** Notice */
@@ -524,6 +530,10 @@ export interface components {
              * @enum {string}
              */
             decision: "approve" | "reject";
+            /** Duration Ms */
+            duration_ms?: number | null;
+            /** Opened At */
+            opened_at?: string | null;
             /** Resolution Note */
             resolution_note: string | null;
             /**
@@ -862,7 +872,9 @@ export interface operations {
     };
     read_patient_view_cases__case_id__patient_view_get: {
         parameters: {
-            query?: never;
+            query?: {
+                lang?: "en" | "es";
+            };
             header?: never;
             path: {
                 case_id: string;
@@ -947,6 +959,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Visitor processing limit or rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

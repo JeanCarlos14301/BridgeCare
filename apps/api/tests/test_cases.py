@@ -322,3 +322,114 @@ def test_logout_hides_cases(client: TestClient) -> None:
     client.post("/session/logout")
     client.cookies.set(SESSION_COOKIE, token)
     assert client.get(f"/cases/{case['case_id']}").status_code == 401
+
+
+# --- B-11 review timing and visitor quota ---
+
+
+def test_review_records_duration_and_opened_at(client: TestClient) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    case_id = case["case_id"]
+
+    # Opening the case in needs_review records opened_at
+    opened = client.get(f"/cases/{case_id}").json()
+    assert opened["status"] == "needs_review"
+
+    # Save review decision
+    approved = _review(client, opened)
+    assert approved.status_code == 200
+    review = approved.json()["review"]
+    assert review is not None
+    assert review["opened_at"] is not None
+    assert isinstance(review["duration_ms"], (int, float))
+    assert review["duration_ms"] >= 0.0
+
+
+def test_visitor_processing_burst_rate_limit(client: TestClient) -> None:
+    client.post("/session")
+    case1 = _create(client, "fx01_clear")
+    case2 = _create(client, "fx01_clear")
+    case3 = _create(client, "fx01_clear")
+
+    res1 = client.post(f"/cases/{case1['case_id']}/process")
+    assert res1.status_code == 200
+
+    res2 = client.post(f"/cases/{case2['case_id']}/process")
+    assert res2.status_code == 200
+
+    # 3rd rapid attempt by visitor within 60s exceeds burst limit
+    res3 = client.post(f"/cases/{case3['case_id']}/process")
+    assert res3.status_code == 429
+    assert "rate limit exceeded" in res3.json()["detail"].lower()
+
+
+def test_visitor_processing_lifetime_cap(client: TestClient) -> None:
+    client.post("/session")
+    case = _create(client, "fx01_clear")
+
+    # Simulate visitor having already used 5 processing runs in their session
+    service = client.app.state.case_service  # type: ignore[attr-defined]
+    client.get("/cases")
+    # Populate visitor processings with 5 runs in the past
+    for _sess_id in list(service._visitor_processings.keys()) or ["fallback"]:
+        service._visitor_processings[_sess_id] = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # Find the current visitor's session id from db
+    factory = client.app.state.db_sessions  # type: ignore[attr-defined]
+    with factory() as db:
+        visitor_session_id = db.execute(
+            text("SELECT session_id FROM cases WHERE id = :id"), {"id": case["case_id"]}
+        ).scalar_one()
+    service._visitor_processings[visitor_session_id] = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+    res = client.post(f"/cases/{case['case_id']}/process")
+    assert res.status_code == 429
+    assert "maximum 5 runs per session" in res.json()["detail"]
+
+
+def test_reviewers_are_exempt_from_visitor_quota(client: TestClient) -> None:
+    _login(client)
+    # Reviewer can process multiple cases without hitting visitor limits
+    for _ in range(3):
+        case = _create(client, "fx01_clear")
+        res = client.post(f"/cases/{case['case_id']}/process")
+        assert res.status_code == 200
+
+
+# --- Spanish patient view localization ---
+
+
+def test_patient_view_defaults_to_english(client: TestClient) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    _review(client, case)
+    view = client.get(f"/cases/{case['case_id']}/patient-view").json()
+    assert view["language"] == "en"
+    assert "prepared with AI assistance" in view["notice"]
+    assert view["medications"][0]["route"] == "by mouth"
+
+
+def test_patient_view_spanish_localization(client: TestClient) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    _review(client, case)
+    view_es = client.get(f"/cases/{case['case_id']}/patient-view?lang=es").json()
+    assert view_es["language"] == "es"
+    assert "preparada con asistencia de IA" in view_es["notice"]
+
+    # Check medications
+    med0 = view_es["medications"][0]
+    assert med0["name"] == "Amoxicillin"  # drug name kept exact
+    assert med0["dose"] == "500"  # dose kept exact
+    assert med0["unit"] == "mg"  # unit kept exact
+    assert med0["route"] == "vía oral"
+    assert med0["frequency"] == "tres veces al día"
+    assert "días" in med0["duration"]
+
+    # Check warning signs
+    assert "Dificultad para respirar" in view_es["warning_signs"]
+
+    # Check activity & diet
+    assert view_es["activity"] == "Descanse en casa durante 3 días."
+    assert view_es["diet"] == "Sin restricciones."
