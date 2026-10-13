@@ -1,0 +1,268 @@
+/* Patient sheet card in the review rail, the preview dialog, and the printed sheet. */
+
+.patient-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.patient-head .muted {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.lock-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+.patient-panel.is-unlocked .lock-badge {
+  background: var(--brand-tint);
+  color: var(--brand-text);
+  animation: unlock .5s var(--ease-out) both;
+}
+
+.sheet-dialog {
+  width: min(56rem, calc(100vw - 4rem));
+  max-height: calc(100vh - 4rem);
+  padding: 0;
+  overflow: hidden;
+}
+
+.sheet-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-dialog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-3);
+}
+
+.sheet-dialog-bar .button-row {
+  margin: 0;
+}
+
+.sheet-dialog-title {
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.printable {
+  overflow-y: auto;
+  padding: var(--space-8) 3rem;
+  background: var(--surface-1);
+  font-size: .9375rem;
+}
+
+.sheet-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--brand);
+}
+
+.sheet-header h3 {
+  font-size: 1.5rem;
+  letter-spacing: -.02em;
+}
+
+.sheet-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  color: var(--brand-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.sheet-brand .wordmark-mark {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sheet-meta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-align: right;
+}
+
+.sheet-summary {
+  margin-top: var(--space-4);
+  font-size: 1rem;
+}
+
+.sheet-section {
+  margin-top: var(--space-6);
+}
+
+.sheet-section h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.sheet-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.sheet-section li {
+  margin: var(--space-1) 0;
+}
+
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-base);
+}
+
+.sheet-table th,
+.sheet-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sheet-table th {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.sheet-table td:first-child {
+  font-weight: 650;
+}
+
+.sheet-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.sheet-notice .icon {
+  margin-top: .2rem;
+}
+
+@media (max-width: 640px) {
+  .printable {
+    padding: var(--space-4);
+  }
+
+  .sheet-meta {
+    text-align: left;
+  }
+
+  .sheet-table thead {
+    display: none;
+  }
+
+  .sheet-table,
+  .sheet-table tbody,
+  .sheet-table tr,
+  .sheet-table td {
+    display: block;
+  }
+
+  .sheet-table tr {
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .sheet-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .sheet-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+}
+
+/* Print only the patient sheet. */
+@media print {
+  .app {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .skip-link,
+  .toast-region {
+    display: none !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+
+  .sheet-dialog,
+  .sheet-dialog[open] {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .sheet-dialog::backdrop {
+    display: none;
+  }
+
+  .printable {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .sheet-header {
+    border-bottom-color: #000;
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    border-bottom-color: #000;
+  }
+}

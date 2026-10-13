@@ -1,0 +1,135 @@
+/*
+ * Design tokens for a light clinical desktop app. Neutral surfaces, one restrained green for
+ * primary actions and the wordmark, soft status colours. Every text/background pair used in the
+ * UI passes WCAG AA. Green is never used as a selection colour, so "selected" is not read as
+ * "supported"; selection is drawn in the neutral ink colour.
+ */
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --bg: #f5f6f8;
+  --surface-1: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f2f4f7;
+  --sidebar: #fbfbfc;
+  --border: #e3e6eb;
+  --border-strong: #d0d5dd;
+  --text: #12161c;
+  --text-muted: #5b6472;
+  --ink: #12161c;
+  --on-ink: #ffffff;
+
+  /* brand */
+  --brand: #2f7d32;
+  --brand-strong: #256628;
+  --brand-text: #2f7d32;
+  --brand-tint: #edf6ee;
+  --on-brand: #ffffff;
+  --focus-ring: #2f7d32;
+
+  /* evidence and status: indicator colour, text colour, tinted background */
+  --success: #17b26a;
+  --success-text: #067647;
+  --success-tint: #ecfdf3;
+  --warning: #f79009;
+  --warning-text: #b54708;
+  --warning-tint: #fffaeb;
+  --danger: #f04438;
+  --danger-text: #b42318;
+  --danger-tint: #fef3f2;
+  --neutral: #98a2b3;
+  --neutral-text: #475467;
+  --neutral-tint: #f2f4f7;
+
+  /* type */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-base: .875rem;
+  --text-sm: .8125rem;
+  --text-xs: .75rem;
+  --text-doc: .9375rem;
+
+  /* shape and space */
+  --radius-md: .375rem;
+  --radius-lg: .5rem;
+  --radius-xl: .625rem;
+  --radius-2xl: .75rem;
+  --radius-pill: 99px;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 5%);
+  --shadow-lift: 0 4px 8px -2px rgb(16 24 40 / 8%), 0 2px 4px -2px rgb(16 24 40 / 6%);
+  --shadow-dialog: 0 20px 24px -4px rgb(16 24 40 / 10%), 0 8px 8px -4px rgb(16 24 40 / 4%);
+
+  /* layout */
+  --sidebar-width: 264px;
+  --toolbar-height: 56px;
+  --stepper-height: 44px;
+  --rail-width: 360px;
+
+  --skeleton: #eceef2;
+  --skeleton-shine: #f6f7f9;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111418;
+  --surface-1: #161a20;
+  --surface-2: #1b2027;
+  --surface-3: #222831;
+  --sidebar: #14181d;
+  --border: #2a313b;
+  --border-strong: #3a4350;
+  --text: #e6e9ee;
+  --text-muted: #9aa4b2;
+  --ink: #e6e9ee;
+  --on-ink: #111418;
+  --brand: #4caf50;
+  --brand-strong: #43a047;
+  --brand-text: #6cc070;
+  --brand-tint: #1c2a1e;
+  --on-brand: #0b1a0c;
+  --focus-ring: #6cc070;
+  --success: #3ccb7f;
+  --success-text: #5fd394;
+  --success-tint: #16281f;
+  --warning: #f5a524;
+  --warning-text: #f2b45a;
+  --warning-tint: #2b2416;
+  --danger: #f2655b;
+  --danger-text: #f58a82;
+  --danger-tint: #2d1a19;
+  --neutral: #6b7585;
+  --neutral-text: #a7b0bd;
+  --neutral-tint: #222831;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-lift: 0 6px 16px rgb(0 0 0 / 35%);
+  --shadow-dialog: 0 24px 48px rgb(0 0 0 / 50%);
+  --skeleton: #1f242c;
+  --skeleton-shine: #272d36;
+}
+
+/* The patient sheet is printed: always light, black text, no backgrounds. */
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface-1: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #ffffff;
+    --border: #000000;
+    --border-strong: #000000;
+    --text: #000000;
+    --text-muted: #000000;
+    --brand-text: #000000;
+    --shadow-card: none;
+  }
+}
