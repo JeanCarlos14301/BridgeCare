@@ -16,7 +16,7 @@ SessionDependency = Annotated[Session, Depends(get_db_session)]
 
 @router.get("/health", response_model=HealthResponse)
 async def health(provider: ProviderDependency) -> HealthResponse:
-    return HealthResponse(provider_mode=provider.mode)
+    return HealthResponse(provider_mode=provider.mode, inference_host=provider.host)
 
 
 @router.get("/ready", response_model=ReadyResponse)

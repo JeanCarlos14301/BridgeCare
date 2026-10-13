@@ -418,6 +418,8 @@ export interface components {
         };
         /** HealthResponse */
         HealthResponse: {
+            /** Inference Host */
+            inference_host?: string | null;
             /**
              * Provider Mode
              * @enum {string}

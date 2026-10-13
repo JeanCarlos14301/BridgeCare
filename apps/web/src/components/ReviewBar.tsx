@@ -1,5 +1,5 @@
 import type { CaseView, Revision, Role } from "../api";
-import { shortHash } from "../lib/caseStats";
+import { formatDuration, shortHash } from "../lib/caseStats";
 import { Icon } from "./Icon";
 
 type Decision = "approve" | "reject";
@@ -47,6 +47,7 @@ export function ReviewBar(props: {
             <p className="muted decision-meta">
               {formatTime(currentReview.reviewed_at)} · content hash{" "}
               <code title={currentReview.content_hash}>{shortHash(currentReview.content_hash)}</code>
+              {currentReview.duration_ms != null && <> · review time {formatDuration(currentReview.duration_ms)}</>}
             </p>
             {currentReview.resolution_note && <p className="decision-note">“{currentReview.resolution_note}”</p>}
             <p className="muted">This case is no longer awaiting a decision.</p>

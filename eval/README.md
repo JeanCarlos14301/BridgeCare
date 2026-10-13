@@ -64,4 +64,22 @@ To execute the automated evaluation harness against a running API instance:
 python eval/run_eval.py --base-url http://localhost:8000
 ```
 
-The script runs all discharge fixtures against the API and produces timestamped JSON and Markdown reports in `eval/reports/`.
+The script runs all discharge fixtures against the API and produces timestamped JSON and Markdown reports in `eval/reports/`. It needs `REVIEWER_PASSWORD` in the environment. Each report names the provider mode, model and prompt version; a `mock` report only proves the plumbing and is never model accuracy.
+
+### Recording time runs in `baseline.json`
+
+The harness cannot time people, so humans record their runs in `eval/baseline.json`:
+
+```json
+{
+  "runs": [
+    {"fixture_id": "fx01_clear_pneumonia", "mode": "manual", "seconds": 0, "date": "2026-10-14"},
+    {"fixture_id": "fx01_clear_pneumonia", "mode": "assisted_review", "seconds": 0, "date": "2026-10-14"}
+  ]
+}
+```
+
+- `manual`: stopwatch time for protocol A. Record no names or other personal data.
+- `assisted_review`: the review time the UI shows after a decision ("review time"), which is the server-measured `review.duration_ms`.
+
+The report shows medians with their `n`: assisted total = median processing (measured in the same run) + median review. The saving is printed only when both manual and assisted review runs exist; otherwise the report says it was not measured. Run at least 3 of each before quoting a number.

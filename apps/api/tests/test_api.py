@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 def test_health_reports_mock_mode(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "provider_mode": "mock"}
+    assert response.json() == {"status": "ok", "provider_mode": "mock", "inference_host": None}
 
 
 def test_ready_checks_mock_provider(client: TestClient) -> None:

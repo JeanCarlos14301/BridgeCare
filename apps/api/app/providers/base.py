@@ -29,6 +29,8 @@ class ExtractionResult:
 
 class LLMProvider(ABC):
     mode: ProviderMode
+    # Hostname of the inference endpoint, shown in the UI; never the key or the full URL.
+    host: str | None = None
 
     @abstractmethod
     async def ready(self) -> tuple[bool, str]:
