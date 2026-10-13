@@ -217,4 +217,50 @@ describe("citation inspector", () => {
     expect(document.activeElement?.closest('[data-field-key="medications[0]"]')).not.toBeNull();
     view.root.unmount();
   });
+
+  it("opens on the fields that need attention and can show all of them", () => {
+    const revision = makeRevision(conflicting);
+    revision.extracted_fields.follow_up = [
+      { instruction: "Follow up", timeframe: "within 7 days", evidence_state: "supported", citations: [cite(1, "x")] },
+    ];
+    const view = render(<CitationInspector documents={documents} revision={revision} />);
+    const keys = () =>
+      [...view.node.querySelectorAll("[data-field-key]")].map((node) => node.getAttribute("data-field-key"));
+    expect(keys()).toEqual(["medications[0]", "activity", "diet"]);
+
+    const allFields = [...view.node.querySelectorAll("button")].find((button) =>
+      button.textContent?.startsWith("All fields"),
+    );
+    click(allFields ?? null);
+    expect(keys()).toEqual(["medications[0]", "follow_up[0]", "activity", "diet"]);
+    view.root.unmount();
+  });
+
+  it("shows all fields when the citation map selects one that is hidden by the filter", () => {
+    const revision = makeRevision(conflicting);
+    revision.extracted_fields.follow_up = [
+      {
+        instruction: "Follow up",
+        timeframe: null,
+        evidence_state: "supported",
+        citations: [cite(2, "The differing dose entries")],
+      },
+    ];
+    const page2 = {
+      page: 2,
+      text: "Continue Lisinopril 20 mg by mouth once a day for 14 days. The differing dose entries need review.",
+    };
+    const pages = [{ ...documents[0], pages: [documents[0].pages[0], page2] }];
+    const view = render(<CitationInspector documents={pages} revision={revision} />);
+    expect(view.node.querySelector('[data-field-key="follow_up[0]"]')).toBeNull();
+
+    const trace = [...view.node.querySelectorAll('[data-testid="citation-trace"]')].find((node) =>
+      node.textContent?.includes("differing"),
+    );
+    click(trace ?? null);
+
+    expect(view.node.querySelector('[data-field-key="follow_up[0]"]')).not.toBeNull();
+    expect(marks(view.node)[0]?.textContent).toBe("The differing dose entries");
+    view.root.unmount();
+  });
 });

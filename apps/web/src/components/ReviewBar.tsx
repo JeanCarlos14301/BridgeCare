@@ -19,6 +19,7 @@ function formatTime(value: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
+/** The reviewer's decision for the current revision; sits under the gate in the review card. */
 export function ReviewBar(props: {
   role: Role;
   revision: Revision;
@@ -34,8 +35,10 @@ export function ReviewBar(props: {
   const noteReady = !gate.requires_resolution_note || noteLength >= NOTE_MINIMUM;
 
   return (
-    <section className="card review-bar" aria-labelledby="review-title">
-      <h2 id="review-title">Reviewer decision</h2>
+    <section className="review-bar" aria-labelledby="review-title">
+      <h2 id="review-title" className="section-heading">
+        Decision
+      </h2>
 
       {currentReview ? (
         <div className={`decision-panel decision-${currentReview.decision}`}>
@@ -44,24 +47,31 @@ export function ReviewBar(props: {
             <p className="decision">
               Revision {props.revision.number} was {currentReview.decision === "approve" ? "approved" : "rejected"}.
             </p>
-            <p className="muted decision-meta">
-              {formatTime(currentReview.reviewed_at)} · content hash{" "}
-              <code title={currentReview.content_hash}>{shortHash(currentReview.content_hash)}</code>
-              {currentReview.duration_ms != null && <> · review time {formatDuration(currentReview.duration_ms)}</>}
-            </p>
+            <dl className="decision-facts">
+              <div>
+                <dt>Decided</dt>
+                <dd>{formatTime(currentReview.reviewed_at)}</dd>
+              </div>
+              <div>
+                <dt>Review time</dt>
+                <dd>
+                  {currentReview.duration_ms != null
+                    ? formatDuration(currentReview.duration_ms)
+                    : "Not measured for this revision"}
+                </dd>
+              </div>
+              <div>
+                <dt>Content hash</dt>
+                <dd>
+                  <code title={currentReview.content_hash}>{shortHash(currentReview.content_hash)}</code>
+                </dd>
+              </div>
+            </dl>
             {currentReview.resolution_note && <p className="decision-note">“{currentReview.resolution_note}”</p>}
-            <p className="muted">This case is no longer awaiting a decision.</p>
           </div>
         </div>
       ) : props.role === "reviewer" ? (
         <>
-          <ol className="review-steps">
-            <li className="is-current">Check every flagged field against its quote</li>
-            {gate.requires_resolution_note && (
-              <li className={noteReady ? "is-done" : "is-current"}>Explain how each conflict was resolved</li>
-            )}
-            <li className={noteReady && gate.approvable ? "is-current" : ""}>Approve or reject this exact revision</li>
-          </ol>
           <label className="field-label" htmlFor="resolution-note">
             Resolution note
             {gate.requires_resolution_note && <span className="required"> (required, 10+ characters)</span>}
@@ -78,7 +88,7 @@ export function ReviewBar(props: {
               ? `${noteLength} of ${NOTE_MINIMUM} characters minimum`
               : `${noteLength} characters (optional)`}
           </p>
-          <div className="button-row">
+          <div className="button-row decision-actions">
             <button
               type="button"
               className="button button-danger"
@@ -86,7 +96,7 @@ export function ReviewBar(props: {
               onClick={() => props.onDecide("reject")}
             >
               <Icon name="x" size={16} />
-              Reject revision
+              Reject
             </button>
             <button
               type="button"
@@ -98,7 +108,7 @@ export function ReviewBar(props: {
               Approve revision {props.revision.number}
             </button>
           </div>
-          {!gate.approvable && <p className="muted">Approval is blocked until the gate reasons are resolved.</p>}
+          {!gate.approvable && <p className="muted fine-print">Approval stays disabled while the gate blocks it.</p>}
           <p className="muted fine-print">
             Approval binds to revision <code>{shortHash(props.revision.revision_id, 8)}</code> and content hash{" "}
             <code title={props.revision.content_hash}>{shortHash(props.revision.content_hash)}</code>.

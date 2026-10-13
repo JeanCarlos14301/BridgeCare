@@ -143,3 +143,33 @@ describe("provider pill", () => {
     view.root.unmount();
   });
 });
+
+describe("server measurements and limits", () => {
+  it("shows the server's quota message when processing returns 429", async () => {
+    stubApi({
+      ...baseRoutes,
+      "POST /session": () => json({ role: "visitor" }),
+      "POST /cases/case-1/process": () =>
+        json({ detail: "Visitor processing limit reached (maximum 3 runs per session)." }, 429),
+    });
+    const view = await renderApp();
+    await act(async () => button(view.node, "Provider timeout").click());
+    expect(view.node.textContent).toContain("Visitor processing limit reached (maximum 3 runs per session).");
+    view.root.unmount();
+  });
+
+  it("reads the processed case as a reviewer so the server starts the review timer", async () => {
+    const needsReview: CaseView = { ...failedCase, status: "needs_review", failure_reason: null };
+    const calls = stubApi({
+      ...baseRoutes,
+      "POST /cases/case-1/process": () => json(needsReview),
+      "GET /cases/case-1": () => json(needsReview),
+    });
+    const view = await renderApp();
+    await act(async () => button(view.node, "Provider timeout").click());
+    expect(calls).toContain("GET /cases/case-1");
+    expect(calls.indexOf("GET /cases/case-1")).toBeGreaterThan(calls.indexOf("POST /cases/case-1/process"));
+    view.root.unmount();
+  });
+});
+

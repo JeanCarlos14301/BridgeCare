@@ -43,11 +43,13 @@ export function GatePanel(props: {
 }) {
   const { gate } = props;
   const summary = gateSummary(gate, props.approved ?? false);
+  const checks = gateChecks(gate);
+  const passed = checks.filter((check) => check.failures === 0).length;
   return (
-    <section className={`card gate gate-${summary.tone}`} aria-labelledby="gate-title">
+    <section className={`gate gate-${summary.tone}`} aria-labelledby="gate-title">
       <div className="gate-head">
         <span className="gate-icon">
-          <Icon name={summary.icon} size={26} />
+          <Icon name={summary.icon} size={20} />
         </span>
         <div>
           <p className="eyebrow">Safety gate</p>
@@ -58,23 +60,6 @@ export function GatePanel(props: {
         </div>
       </div>
 
-      <ul className="checklist" aria-label="Automated checks">
-        {gateChecks(gate).map((check, index) => (
-          <li
-            key={check.id}
-            className={check.failures ? "check-fail" : "check-pass"}
-            style={{ "--i": index } as CSSProperties}
-          >
-            <span className="check-icon">
-              <Icon name={check.failures ? "x" : "check"} size={14} />
-            </span>
-            <span>{check.label}</span>
-            <span className="sr-only">{check.failures ? ", failed" : ", passed"}</span>
-            {check.failures > 0 && <span className="check-count">{check.failures}</span>}
-          </li>
-        ))}
-      </ul>
-
       {gate.blocking_reasons.length > 0 && (
         <ul className="gate-reasons">
           {gate.blocking_reasons.map((reason, index) => {
@@ -83,14 +68,14 @@ export function GatePanel(props: {
             return (
               <li key={`${reason.code}-${reason.field ?? ""}-${index}`}>
                 <div className="reason-main">
+                  <span className="reason-message">{reason.message}</span>
                   <code className="code-chip">{reason.code}</code>
                   {reason.field && <span className="gate-field">{reason.field}</span>}
-                  <span className="reason-message">{reason.message}</span>
                 </div>
                 {fieldKey && props.onGoToField && (
                   <button
                     type="button"
-                    className="button button-sm button-ghost reason-go"
+                    className="button button-sm reason-go"
                     onClick={() => props.onGoToField?.(fieldKey)}
                   >
                     Go to {label ?? "field"}
@@ -102,6 +87,31 @@ export function GatePanel(props: {
           })}
         </ul>
       )}
+
+      <details className="checks">
+        <summary>
+          Automated checks
+          <span className={passed === checks.length ? "checks-score is-pass" : "checks-score"}>
+            {passed} of {checks.length} passed
+          </span>
+        </summary>
+        <ul className="checklist" aria-label="Automated checks">
+          {checks.map((check, index) => (
+            <li
+              key={check.id}
+              className={check.failures ? "check-fail" : "check-pass"}
+              style={{ "--i": index } as CSSProperties}
+            >
+              <span className="check-icon">
+                <Icon name={check.failures ? "x" : "check"} size={12} />
+              </span>
+              <span>{check.label}</span>
+              <span className="sr-only">{check.failures ? ", failed" : ", passed"}</span>
+              {check.failures > 0 && <span className="check-count">{check.failures}</span>}
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   api,
+  ApiError,
   type CaseView,
+  errorDetail,
   type Fixture,
   type Health,
   isConflict,
@@ -13,7 +15,6 @@ import {
 import { AppShell, ThemeToggle } from "./components/AppShell";
 import { CaseHeader } from "./components/CaseHeader";
 import { CaseNav } from "./components/CaseNav";
-import { CaseOverview } from "./components/CaseOverview";
 import { CitationInspector } from "./components/CitationInspector";
 import { Icon } from "./components/Icon";
 import { LoginDialog } from "./components/LoginDialog";
@@ -65,6 +66,8 @@ export default function App() {
       .catch(() => notify("The session or fixture list could not be loaded.", "error"));
   }, [notify]);
 
+  const fetchCase = (caseId: string) => api<CaseView>(`/cases/${caseId}`);
+
   const createAndProcess = async (fixtureId: string) => {
     const epoch = sessionEpoch.current;
     setBusy(true);
@@ -75,9 +78,14 @@ export default function App() {
     try {
       const created = await postJson<CaseView>("/cases/from-fixture", { fixture_id: fixtureId });
       let processRequestId: string | null = null;
-      const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" }, (headers) => {
+      let processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" }, (headers) => {
         processRequestId = headers.get("X-Request-ID");
       });
+      // A reviewer reading the case starts the server-side review timer (B-11). If that read fails,
+      // the processed case is still shown; only the timing is lost.
+      if (role === "reviewer" && processed.status === "needs_review") {
+        processed = await fetchCase(processed.case_id).catch(() => processed);
+      }
       if (epoch !== sessionEpoch.current) return;
       setRequestId(processRequestId);
       setCaseView(processed);
@@ -85,7 +93,11 @@ export default function App() {
       if (processed.status === "failed") notify("Processing failed visibly; nothing was approved.", "error");
     } catch (error) {
       if (epoch !== sessionEpoch.current) return;
-      notify(isConflict(error) ? "This case is already processing." : "The case could not be processed.", "error");
+      if (error instanceof ApiError && error.status === 429) {
+        notify(errorDetail(error) ?? "Processing limit reached. Wait a moment or log in as a reviewer.", "error");
+      } else {
+        notify(isConflict(error) ? "This case is already processing." : "The case could not be processed.", "error");
+      }
     } finally {
       if (epoch === sessionEpoch.current) {
         setBusy(false);
@@ -99,6 +111,13 @@ export default function App() {
       const session = await postJson<Session>("/session/login", { password });
       setRole(session.role);
       notify("Logged in as a reviewer.", "success");
+      // Re-read an open case as the reviewer so the server starts its review timer (B-11).
+      if (caseView) {
+        const epoch = sessionEpoch.current;
+        fetchCase(caseView.case_id)
+          .then((fresh) => epoch === sessionEpoch.current && setCaseView(fresh))
+          .catch(() => notify("The open case could not be refreshed.", "error"));
+      }
       return true;
     } catch {
       return false;
@@ -256,24 +275,24 @@ export default function App() {
             documents={caseView.source_documents}
             revision={revision}
             approved={caseView.status === "approved"}
-            railTop={<CaseOverview revision={revision} />}
+            decision={
+              <ReviewBar
+                role={role}
+                revision={revision}
+                review={caseView.review}
+                note={resolutionNote}
+                onNoteChange={setResolutionNote}
+                onDecide={review}
+                busy={busy}
+              />
+            }
             after={
-              <>
-                <ReviewBar
-                  role={role}
-                  revision={revision}
-                  review={caseView.review}
-                  note={resolutionNote}
-                  onNoteChange={setResolutionNote}
-                  onDecide={review}
-                  busy={busy}
-                />
-                <PatientSheet
-                  key={`${revision.revision_id}-${caseView.status}`}
-                  caseId={caseView.case_id}
-                  approved={caseView.status === "approved"}
-                />
-              </>
+              <PatientSheet
+                key={`${revision.revision_id}-${caseView.status}-${role}`}
+                caseId={caseView.case_id}
+                approved={caseView.status === "approved"}
+                role={role}
+              />
             }
           />
         ) : (

@@ -1,4 +1,5 @@
 import type { CaseView } from "../api";
+import { formatDuration } from "../lib/caseStats";
 import { Icon, type IconName } from "./Icon";
 
 const STATUS: Record<CaseView["status"], { icon: IconName; label: string; tone: string }> = {
@@ -31,13 +32,19 @@ export function CaseHeader({ caseView, title }: { caseView: CaseView; title: str
             <dd>{revision.number}</dd>
           </div>
           <div>
-            <dt>Origin</dt>
-            <dd>{revision.origin === "model" ? "Model output" : "Reviewer edit"}</dd>
-          </div>
-          <div>
             <dt>Prompt</dt>
             <dd>{revision.prompt_version}</dd>
           </div>
+          <div>
+            <dt>Processing</dt>
+            <dd>{formatDuration(revision.timings.total_ms)}</dd>
+          </div>
+          {caseView.review?.revision_id === revision.revision_id && caseView.review.duration_ms != null && (
+            <div>
+              <dt>Review time</dt>
+              <dd>{formatDuration(caseView.review.duration_ms)}</dd>
+            </div>
+          )}
         </dl>
       )}
     </div>

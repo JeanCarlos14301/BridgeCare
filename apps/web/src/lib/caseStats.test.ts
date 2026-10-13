@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import type { Gate } from "../api";
-import { citationStats, evidenceCounts, fieldKeyOf, type FieldRef, formatDuration, gateChecks } from "./caseStats";
+import {
+  attentionKeys,
+  citationStats,
+  evidenceCounts,
+  fieldKeyOf,
+  type FieldRef,
+  formatDuration,
+  gateChecks,
+} from "./caseStats";
 
 const cite = (page: number) => ({ document_id: "d", page, quote: "q" });
 
@@ -55,5 +63,15 @@ describe("case statistics", () => {
   it("formats durations without inventing precision", () => {
     expect(formatDuration(42.4)).toBe("42 ms");
     expect(formatDuration(7940)).toBe("7.9 s");
+    expect(formatDuration(102_400)).toBe("1 min 42 s");
+  });
+
+  it("flags every field that is not plainly supported or that the gate names", () => {
+    const supportedButNamed: FieldRef = { key: "follow_up[0]", label: "F", state: "supported", citations: [] };
+    const keys = attentionKeys(
+      [...fields.filter((field) => field.key !== "follow_up[0]"), supportedButNamed],
+      gate([{ code: "citation_not_found", field: "follow_up[0].citations[0]", message: "not on page" }]),
+    );
+    expect([...keys].sort()).toEqual(["activity", "follow_up[0]", "medications[0]"]);
   });
 });
