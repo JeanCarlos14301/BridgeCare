@@ -1,0 +1,225 @@
+/* Patient sheet card and the printable sheet. */
+
+.patient-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.lock-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  color: var(--text-muted);
+}
+
+.patient-panel.is-unlocked .lock-badge {
+  border-color: var(--brand);
+  background: var(--brand-glow);
+  color: var(--brand-text);
+  animation: unlock .6s var(--ease-out) both;
+}
+
+.printable {
+  margin-top: var(--space-4);
+  padding: var(--space-8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--paper);
+  animation: fade-up .5s var(--ease-out) both;
+}
+
+.sheet-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--brand);
+}
+
+.sheet-header h3 {
+  font-size: 1.5rem;
+  letter-spacing: -.03em;
+}
+
+.sheet-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  color: var(--brand-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.sheet-meta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-align: right;
+}
+
+.sheet-summary {
+  margin-top: var(--space-4);
+  font-size: 1.0625rem;
+}
+
+.sheet-section {
+  margin-top: var(--space-6);
+}
+
+.sheet-section h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.sheet-section ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.sheet-section li {
+  margin: var(--space-1) 0;
+}
+
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.sheet-table th,
+.sheet-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.sheet-table th {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.sheet-table td:first-child {
+  font-weight: 600;
+}
+
+.sheet-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.sheet-notice .icon {
+  margin-top: .2rem;
+}
+
+/* Medication rows become labelled cards on small screens. */
+@media (max-width: 640px) {
+  .printable {
+    padding: var(--space-4);
+  }
+
+  .sheet-meta {
+    text-align: left;
+  }
+
+  .sheet-table thead {
+    display: none;
+  }
+
+  .sheet-table,
+  .sheet-table tbody,
+  .sheet-table tr,
+  .sheet-table td {
+    display: block;
+  }
+
+  .sheet-table tr {
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .sheet-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .sheet-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+}
+
+/* Print only the patient sheet. */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .backdrop,
+  .topbar,
+  .skip-link,
+  .toast-region {
+    display: none !important;
+  }
+
+  /* Print width is below the tab breakpoint; the patient sheet must print whichever tab is open. */
+  .inspector .pane-fields {
+    display: block !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printable,
+  .printable * {
+    visibility: visible;
+  }
+
+  .printable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    animation: none;
+  }
+
+  .sheet-header {
+    border-bottom-color: #000;
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    border-bottom-color: #000;
+  }
+}

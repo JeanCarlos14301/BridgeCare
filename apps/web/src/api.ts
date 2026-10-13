@@ -5,6 +5,7 @@ type Schemas = components["schemas"];
 export type CaseView = Schemas["CaseView"];
 export type Revision = NonNullable<CaseView["revision"]>;
 export type Citation = Schemas["Citation"];
+export type BlockingReason = Schemas["BlockingReason"];
 export type EvidenceState = Schemas["Medication"]["evidence_state"];
 export type Fixture = Schemas["FixtureSummary"];
 export type Gate = Schemas["Gate"];

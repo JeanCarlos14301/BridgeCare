@@ -1,0 +1,173 @@
+/* Keyframes. Every animation here uses transform, opacity, box-shadow, or stroke only. */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(260%);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(4rem, 2rem, 0) scale(1.08);
+  }
+}
+
+@keyframes pulse-ring {
+  from {
+    opacity: .7;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes ring {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--gate) 50%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  25% {
+    box-shadow: 0 0 0 4px var(--accent-glow), 0 0 28px var(--accent-glow);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes unlock {
+  0% {
+    transform: rotate(0);
+  }
+
+  40% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes mark-glow {
+  from {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 .6rem color-mix(in srgb, var(--mark-ring) 45%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 0 transparent;
+  }
+}
+
+/* Reduced motion: no movement, no delays; content appears in its final state. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glow,
+  .pulse-dot::after,
+  .step-active .step-icon::after,
+  .scenario-card.is-processing::after,
+  .skeleton-block,
+  .skeleton-line {
+    animation: none !important;
+  }
+
+  .decision-ring,
+  .decision-stroke {
+    stroke-dashoffset: 0;
+  }
+}

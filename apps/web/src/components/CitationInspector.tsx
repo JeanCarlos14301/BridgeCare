@@ -1,7 +1,9 @@
-import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useEffect, useState } from "react";
+import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Revision, SourceDocument } from "../api";
+import { listFields } from "../lib/caseStats";
 import { FieldsPanel } from "./FieldsPanel";
+import { GatePanel } from "./GatePanel";
 import { chipId, type SelectField, type Selection } from "./selection";
 import { SourcePanel } from "./SourcePanel";
 
@@ -35,23 +37,74 @@ function useIsWide() {
   return wide;
 }
 
+function fieldCard(fieldKey: string) {
+  const cards = document.querySelectorAll<HTMLElement>("[data-field-key]");
+  return [...cards].find((card) => card.dataset.fieldKey === fieldKey) ?? null;
+}
+
 /**
- * Dual-pane inspector: source pages on the left, fields on the right (>= 1024 px), or two tabs on
- * smaller screens. Selecting a field or chip scrolls the source to the exact quote.
+ * Dual-pane inspector: source pages on the left, gate and fields on the right (>= 1024 px), or two
+ * tabs on smaller screens. Fields, chips, gate reasons, and the citation map all link both ways.
  */
 export function CitationInspector(props: {
   documents: SourceDocument[];
   revision: Revision;
-  before?: ReactNode;
+  approved?: boolean;
   after?: ReactNode;
 }) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [tab, setTab] = useState<Tab>("fields");
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const flashTimer = useRef<number | undefined>(undefined);
   const wide = useIsWide();
+  const fields = useMemo(() => listFields(props.revision), [props.revision]);
+
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
   const select: SelectField = (fieldKey, citations, index, state) => {
     setSelection((current) => ({ fieldKey, citations, index, state, nonce: (current?.nonce ?? 0) + 1 }));
     setTab("source");
+  };
+
+  /** Bring a field card into view and flash it, without leaving the pane the reviewer is in. */
+  const showField = (fieldKey: string, focus: boolean) => {
+    window.clearTimeout(flashTimer.current);
+    setFlashKey(fieldKey);
+    flashTimer.current = window.setTimeout(() => setFlashKey(null), 1200);
+    window.requestAnimationFrame(() => {
+      const card = fieldCard(fieldKey);
+      if (!card) return;
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      if (typeof card.scrollIntoView === "function") {
+        card.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+      }
+      if (focus) card.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+    });
+  };
+
+  const selectQuietly = (fieldKey: string, index: number) => {
+    const field = fields.find((candidate) => candidate.key === fieldKey);
+    if (!field?.citations[index]) return;
+    setSelection((current) => ({
+      fieldKey,
+      citations: field.citations,
+      index,
+      state: field.state,
+      nonce: (current?.nonce ?? 0) + 1,
+    }));
+  };
+
+  // From the gate: select the field's first quote and move to the field itself.
+  const goToField = (fieldKey: string) => {
+    selectQuietly(fieldKey, 0);
+    setTab("fields");
+    showField(fieldKey, true);
+  };
+
+  // From the citation map: select that quote and, on wide screens, reveal its field card.
+  const pickTrace = (fieldKey: string, index: number) => {
+    selectQuietly(fieldKey, index);
+    if (wide) showField(fieldKey, false);
   };
 
   // `[` and `]` cycle through the citations of the selected field.
@@ -96,6 +149,7 @@ export function CitationInspector(props: {
   // Tab semantics only exist while the tabs are shown; on wide screens both panes are regions.
   const paneProps = (id: Tab) =>
     wide ? {} : { role: "tabpanel", "aria-labelledby": `tab-${id}`, hidden: tab !== id };
+  const labelOf = (fieldKey: string) => fields.find((field) => field.key === fieldKey)?.label ?? null;
 
   return (
     <div className="inspector">
@@ -124,12 +178,19 @@ export function CitationInspector(props: {
         className="inspector-pane pane-source"
         documents={props.documents}
         selection={selection}
+        fields={fields}
         onBack={backToField}
+        onPickTrace={pickTrace}
         {...paneProps("source")}
       />
       <div id="pane-fields" className="workspace-side inspector-pane pane-fields" {...paneProps("fields")}>
-        {props.before}
-        <FieldsPanel revision={props.revision} selection={selection} onSelect={select} />
+        <GatePanel
+          gate={props.revision.gate}
+          approved={props.approved}
+          fieldLabel={labelOf}
+          onGoToField={goToField}
+        />
+        <FieldsPanel revision={props.revision} selection={selection} flashKey={flashKey} onSelect={select} />
         {props.after}
       </div>
     </div>

@@ -179,4 +179,42 @@ describe("citation inspector", () => {
     expect(document.activeElement).toBe(chip);
     view.root.unmount();
   });
+
+  it("selects a quote from the citation map in the source", () => {
+    const view = render(<CitationInspector documents={documents} revision={makeRevision(conflicting)} />);
+    const traces = [...view.node.querySelectorAll('[data-testid="citation-trace"]')];
+    expect(traces.map((trace) => trace.closest("[data-page]")?.getAttribute("data-page"))).toEqual(["1", "2"]);
+
+    click(traces[1]);
+
+    const found = marks(view.node);
+    expect(found).toHaveLength(1);
+    expect(found[0].textContent).toBe("Continue Lisinopril 20 mg by mouth once a day for 14 days.");
+    expect(status(view.node)).toBe("Showing quote on page 2 (2 of 2). Conflicting evidence.");
+    view.root.unmount();
+  });
+
+  it("jumps from a gate reason to its field and first quote", async () => {
+    const revision = {
+      ...makeRevision(conflicting),
+      gate: {
+        approvable: true,
+        requires_resolution_note: true,
+        blocking_reasons: [
+          { code: "conflicting_field" as const, field: "medications[0]", message: "Conflicting values." },
+        ],
+      },
+    };
+    const view = render(<CitationInspector documents={documents} revision={revision} />);
+    const go = [...view.node.querySelectorAll("button")].find((button) => button.textContent?.includes("Go to"));
+    expect(go?.textContent).toContain("Go to Lisinopril");
+
+    click(go ?? null);
+    await act(() => new Promise((resolve) => window.requestAnimationFrame(resolve)));
+
+    expect(marks(view.node)[0]?.closest("[data-page]")?.getAttribute("data-page")).toBe("1");
+    expect(view.node.querySelector('[data-field-key="medications[0]"]')?.className).toContain("is-flashing");
+    expect(document.activeElement?.closest('[data-field-key="medications[0]"]')).not.toBeNull();
+    view.root.unmount();
+  });
 });

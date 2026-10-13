@@ -1,0 +1,307 @@
+/* Dual-pane citation inspector: layout, source window, citation map, highlight. */
+
+.inspector {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.workspace-side {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/* `hidden` must win over the panes' own display values (inactive tab on small screens). */
+.inspector-pane[hidden] {
+  display: none;
+}
+
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-1);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.segment[aria-selected="true"] {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+@media (max-width: 1023.98px) {
+  .source-panel .window-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .inspector {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .source-panel {
+    position: sticky;
+    top: 4.75rem;
+  }
+
+  .source-panel .window-body {
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+  }
+}
+
+/* Window chrome around the source document */
+
+.window {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+  animation: fade-up .55s var(--ease-out) both;
+}
+
+.window-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-3);
+}
+
+.window-dots {
+  display: inline-flex;
+  gap: .4rem;
+}
+
+.window-dots span {
+  width: .7rem;
+  height: .7rem;
+  border-radius: 50%;
+  background: var(--dot-red);
+}
+
+.window-dots span:nth-child(2) {
+  background: var(--dot-amber);
+}
+
+.window-dots span:nth-child(3) {
+  background: var(--dot-green);
+}
+
+.window-title {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.window-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.page-jump {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-1);
+}
+
+.page-jump-button {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.page-jump-button:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.window-body {
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  scroll-behavior: smooth;
+}
+
+.inspector-status {
+  margin: var(--space-3) var(--space-4) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-bubble);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.inspector-status.is-missing {
+  border-color: var(--danger);
+  color: var(--danger-text);
+}
+
+.source-document h3 {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.source-page {
+  position: relative;
+  margin-bottom: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--paper);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 3%) inset;
+}
+
+.source-page p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .9375rem;
+  line-height: 1.75;
+}
+
+.page-label {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.page-of {
+  opacity: .7;
+}
+
+/* Citation map: every located quote, faint, clickable with a pointer. */
+
+.trace {
+  border-radius: var(--radius-md);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: .3em;
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+
+.trace-supported {
+  text-decoration-color: color-mix(in srgb, var(--success) 55%, transparent);
+}
+
+.trace-ambiguous {
+  text-decoration-color: color-mix(in srgb, var(--warning) 70%, transparent);
+  text-decoration-style: dotted;
+}
+
+.trace-conflicting {
+  text-decoration-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  text-decoration-style: wavy;
+}
+
+.trace-missing {
+  text-decoration-color: var(--neutral);
+  text-decoration-style: dashed;
+}
+
+.trace:hover {
+  background: var(--surface-3);
+}
+
+/* The selected quote */
+
+mark {
+  color: var(--text);
+}
+
+.citation-mark {
+  padding: .1em .2em;
+  border-radius: var(--radius-md);
+  scroll-margin: 4rem;
+  animation: mark-glow .6s ease-out;
+}
+
+.citation-mark:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mark-success {
+  --mark-ring: var(--success);
+  background: var(--success-tint);
+  box-shadow: 0 0 0 1px var(--success);
+}
+
+.mark-warning {
+  --mark-ring: var(--warning);
+  background: var(--warning-tint);
+  box-shadow: 0 0 0 1px var(--warning);
+}
+
+.mark-neutral {
+  --mark-ring: var(--neutral);
+  background: var(--neutral-tint);
+  box-shadow: 0 0 0 1px var(--neutral);
+}
+
+/* A second cue besides colour: conflicting quotes get a wavy underline, ambiguous a dotted one. */
+.mark-conflicting {
+  text-decoration: underline wavy var(--danger);
+  text-underline-offset: .25em;
+}
+
+.mark-ambiguous {
+  text-decoration: underline dotted var(--warning);
+  text-underline-offset: .25em;
+}
+
+@media (max-width: 640px) {
+  .window-body {
+    padding: var(--space-3);
+  }
+
+  .source-page {
+    padding: var(--space-6) var(--space-4) var(--space-3);
+  }
+}

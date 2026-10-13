@@ -146,6 +146,33 @@ test machine); the CSP blocked them as intended. The served files contain no ref
 the only absolute URLs in the bundle are React's `w3.org` namespace and `react.dev` error links,
 which are never fetched.
 
+## UI polish (user request after the first local run)
+
+Branch: `feat/ui-polish` (on top of `feat/wp2-citation-inspector`). The user found the first
+redesign too plain and asked for richer motion and information design inside the frontend.
+
+- Safety pipeline (Source, Extract, Verify, Gate, Review, Patient sheet) driven only by the case
+  response; before a case it explains the flow.
+- Scenario cards with icon, description, and scenario tag; compact rows on phones.
+- Case overview: medications, quotes found `verified/total` (from `citation_not_found` reasons on
+  `...citations[i]` paths), conflicting or ambiguous fields, server-measured processing time, and an
+  evidence distribution bar with a labelled legend. No figure is shown that is not in the response.
+- Citation map: every located quote is underlined in the source (style differs per evidence state);
+  clicking one selects it and reveals its field. Page jump buttons in the window bar.
+- Gate as a checklist of automated checks with "Go to field" links per blocking reason.
+- Medication cards with value cells (missing values dashed) and uncertainty notes inside the field.
+- Reviewer steps, note counter, animated decision mark, approved content hash; patient sheet shows
+  locked or unlocked state and a print layout with labelled medication rows on phones.
+- Toasts for status messages (errors stay until dismissed), processing skeleton, background glow.
+- Inline SVG icons drawn for the project; no dependency added. CSS split into `base`, `shell`, `case`,
+  `inspector`, `panels`, `sheet`, `motion`. Every animation respects `prefers-reduced-motion`.
+
+Gates: lint 0, typecheck 0, tests 0 (27/27 in 6 files), build 0, no line > 120, no
+`dangerouslySetInnerHTML`. New tests cover case statistics, segment building, selecting from the
+citation map, and gate "Go to field". Browser (production build with the nginx CSP header, headless
+Edge): reviewer flow works end to end, no console errors, 375 px without horizontal scroll, light
+theme checked.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of

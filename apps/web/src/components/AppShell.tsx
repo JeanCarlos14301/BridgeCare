@@ -1,5 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 
+import { Icon } from "./Icon";
+
 type Theme = "dark" | "light";
 
 function storedTheme(): Theme {
@@ -20,14 +22,17 @@ function ThemeToggle() {
       // Storage can be unavailable (private mode); the theme still applies for this visit.
     }
   }, [theme]);
+  const light = theme === "light";
   return (
     <button
       type="button"
-      className="button button-ghost button-sm"
-      aria-pressed={theme === "light"}
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      className="icon-button"
+      aria-pressed={light}
+      aria-label="Light theme"
+      title={light ? "Switch to dark theme" : "Switch to light theme"}
+      onClick={() => setTheme(light ? "dark" : "light")}
     >
-      Light theme
+      <Icon name={light ? "sun" : "moon"} size={18} />
     </button>
   );
 }
@@ -35,6 +40,10 @@ function ThemeToggle() {
 export function AppShell(props: { status: ReactNode; session: ReactNode; children: ReactNode }) {
   return (
     <>
+      <div className="backdrop" aria-hidden="true">
+        <span className="glow glow-brand" />
+        <span className="glow glow-accent" />
+      </div>
       <a className="skip-link" href="#workspace">
         Skip to workspace
       </a>
@@ -43,6 +52,7 @@ export function AppShell(props: { status: ReactNode; session: ReactNode; childre
           <p className="wordmark">
             <span className="wordmark-mark" aria-hidden="true" />
             BridgeCare
+            <span className="wordmark-tag">Discharge review</span>
           </p>
           <div className="topbar-actions">
             {props.status}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   api,
@@ -11,13 +11,17 @@ import {
 } from "./api";
 import { AppShell } from "./components/AppShell";
 import { CaseHeader } from "./components/CaseHeader";
+import { CaseOverview } from "./components/CaseOverview";
 import { CitationInspector } from "./components/CitationInspector";
-import { FixturePicker } from "./components/FixturePicker";
-import { GatePanel } from "./components/GatePanel";
+import { Icon } from "./components/Icon";
 import { LoginDialog } from "./components/LoginDialog";
 import { PatientSheet } from "./components/PatientSheet";
+import { Pipeline } from "./components/Pipeline";
 import { ProviderPill } from "./components/ProviderPill";
 import { ReviewBar } from "./components/ReviewBar";
+import { ScenarioPicker } from "./components/ScenarioPicker";
+import { Toast, type ToastMessage, type ToastTone } from "./components/Toast";
+import { WorkspaceSkeleton } from "./components/WorkspaceSkeleton";
 
 type Session = { role: Role };
 
@@ -27,10 +31,18 @@ export default function App() {
   const [caseView, setCaseView] = useState<CaseView | null>(null);
   const [role, setRole] = useState<Role>("visitor");
   const [resolutionNote, setResolutionNote] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // Bumped on logout so responses to requests started before it are dropped (B-12.6).
   const sessionEpoch = useRef(0);
+  const toastId = useRef(0);
+
+  const notify = useCallback((text: string, tone: ToastTone = "info") => {
+    toastId.current += 1;
+    setToast({ id: toastId.current, text, tone });
+  }, []);
+  const dismissToast = useCallback(() => setToast(null), []);
 
   useEffect(() => {
     // The MOCK badge must be visible before any case is processed (B-12.1).
@@ -43,25 +55,30 @@ export default function App() {
         setRole(session.role);
         setFixtures(await api<Fixture[]>("/fixtures"));
       })
-      .catch(() => setMessage("The session or fixture list could not be loaded."));
-  }, []);
+      .catch(() => notify("The session or fixture list could not be loaded.", "error"));
+  }, [notify]);
 
   const createAndProcess = async (fixtureId: string) => {
     const epoch = sessionEpoch.current;
     setBusy(true);
-    setMessage("Processing case…");
+    setProcessingId(fixtureId);
+    setCaseView(null);
+    setToast(null);
     try {
       const created = await postJson<CaseView>("/cases/from-fixture", { fixture_id: fixtureId });
       const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" });
       if (epoch !== sessionEpoch.current) return;
       setCaseView(processed);
       setResolutionNote("");
-      setMessage(null);
+      if (processed.status === "failed") notify("Processing failed visibly; nothing was approved.", "error");
     } catch (error) {
       if (epoch !== sessionEpoch.current) return;
-      setMessage(isConflict(error) ? "This case is already processing." : "The case could not be processed.");
+      notify(isConflict(error) ? "This case is already processing." : "The case could not be processed.", "error");
     } finally {
-      if (epoch === sessionEpoch.current) setBusy(false);
+      if (epoch === sessionEpoch.current) {
+        setBusy(false);
+        setProcessingId(null);
+      }
     }
   };
 
@@ -69,7 +86,7 @@ export default function App() {
     try {
       const session = await postJson<Session>("/session/login", { password });
       setRole(session.role);
-      setMessage(null);
+      notify("Logged in as a reviewer.", "success");
       return true;
     } catch {
       return false;
@@ -83,19 +100,20 @@ export default function App() {
     setCaseView(null);
     setResolutionNote("");
     setBusy(false);
+    setProcessingId(null);
     try {
       await api<void>("/session/logout", { method: "POST" });
     } catch {
-      setMessage("Logout failed. You are still logged in as a reviewer; try again.");
+      notify("Logout failed. You are still logged in as a reviewer; try again.", "error");
       return;
     }
     setRole("visitor");
-    setMessage("Logged out.");
+    notify("Logged out.", "success");
     // Logout revokes the session cookie; start a fresh visitor session for the next case.
     try {
       setRole((await api<Session>("/session", { method: "POST" })).role);
     } catch {
-      setMessage("Logged out. Reload the page to start a new session.");
+      notify("Logged out. Reload the page to start a new session.", "error");
     }
   };
 
@@ -105,10 +123,11 @@ export default function App() {
     const { gate } = revision;
     const noteMissing = gate.requires_resolution_note && resolutionNote.trim().length < 10;
     if (decision === "approve" && (!gate.approvable || noteMissing)) {
-      setMessage(
+      notify(
         gate.requires_resolution_note
           ? "A resolution note of at least 10 characters is required."
           : "Approval is blocked by the current gate.",
+        "error",
       );
       return;
     }
@@ -123,13 +142,14 @@ export default function App() {
       });
       if (epoch !== sessionEpoch.current) return;
       setCaseView(updated);
-      setMessage(decision === "approve" ? "Revision approved." : "Revision rejected.");
+      notify(decision === "approve" ? "Revision approved." : "Revision rejected.", "success");
     } catch (error) {
       if (epoch !== sessionEpoch.current) return;
-      setMessage(
+      notify(
         isConflict(error)
           ? "Review conflict: this revision is stale or blocked. Reload and review the current revision."
           : "The review could not be saved.",
+        "error",
       );
     } finally {
       if (epoch === sessionEpoch.current) setBusy(false);
@@ -137,11 +157,16 @@ export default function App() {
   };
 
   const revision = caseView?.revision ?? null;
+  const fixtureTitle = fixtures.find((fixture) => fixture.id === caseView?.fixture_id)?.title ?? null;
   const session =
     role === "reviewer" ? (
       <>
-        <span className="pill pill-role">Reviewer</span>
+        <span className="pill pill-role">
+          <Icon name="userCheck" size={14} />
+          Reviewer
+        </span>
         <button type="button" className="button button-sm" onClick={logout}>
+          <Icon name="logout" size={14} />
           Log out
         </button>
       </>
@@ -154,52 +179,78 @@ export default function App() {
       status={<ProviderPill mode={providerMode ?? revision?.provider_mode ?? null} revision={revision} />}
       session={session}
     >
-      <section className="case-strip" aria-labelledby="strip-title">
-        <p className="eyebrow">Synthetic discharge documents</p>
-        <h1 id="strip-title">
-          Review. Verify. <span className="brand-text">Approve.</span>
-        </h1>
-        <p className="lede">
-          Pick a fixture. Every extracted value links to its quote in the source, and only a reviewer can approve.
-        </p>
-        <FixturePicker
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-copy">
+          <p className="eyebrow hero-eyebrow">
+            <Icon name="shieldCheck" size={14} />
+            Synthetic documents only
+          </p>
+          <h1 id="hero-title">
+            Review. Verify. <span className="brand-text">Approve.</span>
+          </h1>
+          <p className="lede">
+            BridgeCare turns a discharge document into a patient sheet. Every value links to its quote, unsafe output
+            is blocked, and only a reviewer can release it.
+          </p>
+        </div>
+        <ScenarioPicker
           fixtures={fixtures}
           activeId={caseView?.fixture_id ?? null}
-          busy={busy}
+          processingId={processingId}
           onPick={createAndProcess}
         />
-        {caseView && <CaseHeader caseView={caseView} />}
       </section>
 
-      <div className="live-region" role="status" aria-live="polite">
-        {message && <p className="notice">{message}</p>}
-      </div>
+      <Pipeline caseView={caseView} processing={processingId !== null} />
 
-      {caseView &&
-        (revision ? (
-          <CitationInspector
-            key={revision.revision_id}
-            documents={caseView.source_documents}
-            revision={revision}
-            before={<GatePanel gate={revision.gate} />}
-            after={
-              <>
-                <ReviewBar
-                  role={role}
-                  revision={revision}
-                  review={caseView.review}
-                  note={resolutionNote}
-                  onNoteChange={setResolutionNote}
-                  onDecide={review}
-                  busy={busy}
-                />
-                <PatientSheet key={`${revision.revision_id}-${caseView.status}`} caseId={caseView.case_id} />
-              </>
-            }
-          />
-        ) : (
-          <p className="alert">Processing did not produce a reviewable revision.</p>
-        ))}
+      {processingId !== null && <WorkspaceSkeleton />}
+
+      {caseView && (
+        <div className="case-area">
+          <CaseHeader caseView={caseView} title={fixtureTitle} />
+          {revision ? (
+            <>
+              <CaseOverview revision={revision} />
+              <CitationInspector
+                key={revision.revision_id}
+                documents={caseView.source_documents}
+                revision={revision}
+                approved={caseView.status === "approved"}
+                after={
+                  <>
+                    <ReviewBar
+                      role={role}
+                      revision={revision}
+                      review={caseView.review}
+                      note={resolutionNote}
+                      onNoteChange={setResolutionNote}
+                      onDecide={review}
+                      busy={busy}
+                    />
+                    <PatientSheet
+                      key={`${revision.revision_id}-${caseView.status}`}
+                      caseId={caseView.case_id}
+                      approved={caseView.status === "approved"}
+                    />
+                  </>
+                }
+              />
+            </>
+          ) : (
+            <div className="card failure-card">
+              <Icon name="alert" size={22} />
+              <div>
+                <h2>Processing did not produce a reviewable revision.</h2>
+                <p className="muted">
+                  The failure is shown as it happened. No content was generated, so there is nothing to approve.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <Toast toast={toast} onDismiss={dismissToast} />
     </AppShell>
   );
 }

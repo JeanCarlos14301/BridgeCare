@@ -1,7 +1,9 @@
-import type { MouseEvent, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 
 import type { Citation, EvidenceState, Revision } from "../api";
+import { fieldKeyOf } from "../lib/caseStats";
 import { EvidenceBadge } from "./EvidenceBadge";
+import { Icon, type IconName } from "./Icon";
 import { chipId, type SelectField, type Selection } from "./selection";
 
 const MEDICATION_KEYS = ["dose", "unit", "route", "frequency", "duration"] as const;
@@ -11,6 +13,8 @@ type FieldProps = {
   state: EvidenceState;
   citations?: Citation[];
   selection: Selection | null;
+  flashKey: string | null;
+  notes: string[];
   onSelect: SelectField;
 };
 
@@ -28,6 +32,7 @@ function CitationChips({ fieldKey, state, citations = [], selection, onSelect }:
           aria-label={`Show quote on page ${citation.page}`}
           onClick={() => onSelect(fieldKey, citations, index, state)}
         >
+          <Icon name="quote" size={12} />
           p. {citation.page}
         </button>
       ))}
@@ -56,25 +61,85 @@ function FieldLabel({ field, children }: { field: FieldProps; children: ReactNod
   );
 }
 
-function selectedClass(field: FieldProps) {
-  return field.selection?.fieldKey === field.fieldKey ? " is-selected" : "";
+function cardClass(base: string, field: FieldProps) {
+  const selected = field.selection?.fieldKey === field.fieldKey ? " is-selected" : "";
+  const flashing = field.flashKey === field.fieldKey ? " is-flashing" : "";
+  return `${base} state-${field.state}${selected}${flashing}`;
 }
 
-function TextField(props: FieldProps & { text: string }) {
+function Notes({ notes }: { notes: string[] }) {
+  if (!notes.length) return null;
   return (
-    <li className={`compact-field state-${props.state}${selectedClass(props)}`} onClick={cardClick(props)}>
-      <EvidenceBadge state={props.state} />
-      <span className="compact-text">
-        <FieldLabel field={props}>{props.text}</FieldLabel>
-      </span>
-      <CitationChips {...props} />
+    <ul className="field-notes">
+      {notes.map((note, index) => (
+        <li key={index}>
+          <Icon name="info" size={14} />
+          {note}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TextField(props: FieldProps & { text: string; index: number }) {
+  return (
+    <li
+      className={cardClass("compact-field", props)}
+      data-field-key={props.fieldKey}
+      style={{ "--i": props.index } as CSSProperties}
+      onClick={cardClick(props)}
+    >
+      <div className="compact-row">
+        <EvidenceBadge state={props.state} />
+        <span className="compact-text">
+          <FieldLabel field={props}>{props.text}</FieldLabel>
+        </span>
+        <CitationChips {...props} />
+      </div>
+      <Notes notes={props.notes} />
     </li>
   );
 }
 
-export function FieldsPanel(props: { revision: Revision; selection: Selection | null; onSelect: SelectField }) {
+function SectionTitle({ icon, title, count }: { icon: IconName; title: string; count?: number }) {
+  return (
+    <h3 className="section-title">
+      <span className="section-icon">
+        <Icon name={icon} size={15} />
+      </span>
+      {title}
+      {count !== undefined && <span className="section-count">{count}</span>}
+    </h3>
+  );
+}
+
+export function FieldsPanel(props: {
+  revision: Revision;
+  selection: Selection | null;
+  flashKey?: string | null;
+  onSelect: SelectField;
+}) {
   const { extracted_fields: fields, uncertainties } = props.revision;
-  const shared = { selection: props.selection, onSelect: props.onSelect };
+  const notesFor = (key: string) =>
+    uncertainties.filter((item) => fieldKeyOf(item.field) === key).map((item) => item.note);
+  const knownKeys = new Set([
+    ...fields.medications.map((_, index) => `medications[${index}]`),
+    ...fields.follow_up.map((_, index) => `follow_up[${index}]`),
+    ...fields.warning_signs.map((_, index) => `warning_signs[${index}]`),
+    "activity",
+    "diet",
+  ]);
+  const otherUncertainties = uncertainties.filter((item) => !knownKeys.has(fieldKeyOf(item.field)));
+  const field = (fieldKey: string, state: EvidenceState, citations?: Citation[]): FieldProps => ({
+    fieldKey,
+    state,
+    citations,
+    selection: props.selection,
+    flashKey: props.flashKey ?? null,
+    notes: notesFor(fieldKey),
+    onSelect: props.onSelect,
+  });
+
   return (
     <section className="card fields-panel" aria-labelledby="fields-title">
       <p className="eyebrow">Extracted fields</p>
@@ -84,100 +149,100 @@ export function FieldsPanel(props: { revision: Revision; selection: Selection | 
         press <kbd>[</kbd> and <kbd>]</kbd> to move between them.
       </p>
 
-      <h3>Medications</h3>
+      <SectionTitle icon="pill" title="Medications" count={fields.medications.length} />
       {fields.medications.length === 0 && <p className="muted">No medications extracted.</p>}
       <div className="field-list">
         {fields.medications.map((medication, index) => {
-          const field: FieldProps = {
-            fieldKey: `medications[${index}]`,
-            state: medication.evidence_state,
-            citations: medication.citations,
-            ...shared,
-          };
+          const card = field(`medications[${index}]`, medication.evidence_state, medication.citations);
           return (
             <article
-              className={`field-card state-${medication.evidence_state}${selectedClass(field)}`}
+              className={cardClass("field-card", card)}
+              data-field-key={card.fieldKey}
               key={index}
-              onClick={cardClick(field)}
+              style={{ "--i": index } as CSSProperties}
+              onClick={cardClick(card)}
             >
               <div className="field-heading">
-                <FieldLabel field={field}>
-                  <strong>{medication.name ?? "Unnamed medication"}</strong>
+                <span className="med-icon">
+                  <Icon name="pill" size={18} />
+                </span>
+                <FieldLabel field={card}>
+                  <strong className="med-name">{medication.name ?? "Unnamed medication"}</strong>
                 </FieldLabel>
                 <EvidenceBadge state={medication.evidence_state} />
               </div>
-              <dl className="field-values">
+              <dl className="spec-grid">
                 {MEDICATION_KEYS.map((key) => (
-                  <div key={key}>
+                  <div key={key} className={medication[key] ? "spec" : "spec spec-missing"}>
                     <dt>{key}</dt>
-                    <dd className={medication[key] ? undefined : "not-stated"}>{medication[key] ?? "Not stated"}</dd>
+                    <dd>{medication[key] ?? "Not stated"}</dd>
                   </div>
                 ))}
               </dl>
-              <CitationChips {...field} />
+              <Notes notes={card.notes} />
+              <div className="field-footer">
+                <span className="field-footer-label">Evidence</span>
+                <CitationChips {...card} />
+              </div>
             </article>
           );
         })}
       </div>
 
-      <h3>Follow-up</h3>
+      <SectionTitle icon="calendar" title="Follow-up" count={fields.follow_up.length} />
       <ul className="compact-list">
         {fields.follow_up.map((item, index) => (
           <TextField
             key={index}
-            fieldKey={`follow_up[${index}]`}
-            state={item.evidence_state}
+            index={index}
             text={`${item.instruction ?? "Not stated"}${item.timeframe ? ` (${item.timeframe})` : ""}`}
-            citations={item.citations}
-            {...shared}
+            {...field(`follow_up[${index}]`, item.evidence_state, item.citations)}
           />
         ))}
       </ul>
 
-      <h3>Warning signs</h3>
+      <SectionTitle icon="alert" title="Warning signs" count={fields.warning_signs.length} />
       <ul className="compact-list">
         {fields.warning_signs.map((item, index) => (
           <TextField
             key={index}
-            fieldKey={`warning_signs[${index}]`}
-            state={item.evidence_state}
+            index={index}
             text={item.text ?? "Not stated"}
-            citations={item.citations}
-            {...shared}
+            {...field(`warning_signs[${index}]`, item.evidence_state, item.citations)}
           />
         ))}
       </ul>
 
-      <h3>Activity and diet</h3>
+      <SectionTitle icon="pulse" title="Activity and diet" />
       <ul className="compact-list">
         <TextField
-          fieldKey="activity"
-          state={fields.activity.evidence_state}
+          index={0}
           text={`Activity: ${fields.activity.text ?? "Not stated"}`}
-          citations={fields.activity.citations}
-          {...shared}
+          {...field("activity", fields.activity.evidence_state, fields.activity.citations)}
         />
         <TextField
-          fieldKey="diet"
-          state={fields.diet.evidence_state}
+          index={1}
           text={`Diet: ${fields.diet.text ?? "Not stated"}`}
-          citations={fields.diet.citations}
-          {...shared}
+          {...field("diet", fields.diet.evidence_state, fields.diet.citations)}
         />
       </ul>
 
-      <h3>Uncertainties</h3>
-      <ul className="uncertainties">
-        {uncertainties.length ? (
-          uncertainties.map((item) => (
-            <li key={item.field}>
-              <code className="code-chip">{item.field}</code> {item.note}
-            </li>
-          ))
-        ) : (
-          <li className="muted">None recorded.</li>
-        )}
-      </ul>
+      {(uncertainties.length === 0 || otherUncertainties.length > 0) && (
+        <>
+          <SectionTitle icon="help" title="Uncertainties" />
+          <ul className="uncertainties">
+            {otherUncertainties.length ? (
+              otherUncertainties.map((item) => (
+                <li key={item.field}>
+                  <code className="code-chip">{item.field}</code> {item.note}
+                </li>
+              ))
+            ) : (
+              <li className="muted">None recorded.</li>
+            )}
+          </ul>
+        </>
+      )}
     </section>
   );
 }
