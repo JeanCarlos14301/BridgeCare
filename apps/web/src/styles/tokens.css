@@ -1,0 +1,112 @@
+/*
+ * Design tokens. Palette inspired by evolus.ai (see docs/plans/design-notes.md), adjusted so every
+ * text/background pair used in the UI passes WCAG AA. Lime is a brand colour only and never marks
+ * an evidence state.
+ */
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #0a0a0a;
+  --surface-1: #101010;
+  --surface-2: #171717;
+  --surface-3: #1e1e1e;
+  --border: #262626;
+  --border-strong: #3a3a3a;
+  --text: #fafafa;
+  --text-muted: #a3a3a3;
+
+  /* brand */
+  --brand: #76e021;
+  --brand-strong: #5fb814;
+  --brand-text: #76e021;
+  --on-brand: #0a1206;
+  --focus-ring: #76e021;
+  --accent: #a5b4fc;
+
+  /* evidence states: glyph colour, text colour, tinted background */
+  --success: #00d294;
+  --success-text: #34d399;
+  --success-tint: #0f2a20;
+  --warning: #fcbb00;
+  --warning-text: #fbbf24;
+  --warning-tint: #2a2410;
+  --danger: #ff6568;
+  --danger-text: #f87171;
+  --danger-tint: #2c1314;
+  --neutral: #737373;
+  --neutral-text: #a3a3a3;
+  --neutral-tint: #1e1e1e;
+
+  /* window chrome dots */
+  --dot-red: #ff5f56;
+  --dot-amber: #ffbd2e;
+  --dot-green: #27c93f;
+
+  /* type */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-h1: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
+  --text-h2: clamp(1.125rem, 1rem + .5vw, 1.375rem);
+  --text-h3: 1rem;
+  --text-sm: .875rem;
+  --text-xs: .75rem;
+
+  /* shape and space */
+  --radius-md: .375rem;
+  --radius-lg: .5rem;
+  --radius-xl: .75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-pill: 99px;
+  --radius-bubble: 1rem 1rem 1rem .25rem;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 4%) inset, 0 12px 32px rgb(0 0 0 / 35%);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fafafa;
+  --surface-1: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f5f5f5;
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
+  --text: #171717;
+  --text-muted: #525252;
+  --brand-text: #2f6a08;
+  --focus-ring: #3f7d0e;
+  --accent: #4338ca;
+  --success-text: #047857;
+  --success-tint: #ecfdf5;
+  --warning-text: #92400e;
+  --warning-tint: #fffbeb;
+  --danger-text: #b91c1c;
+  --danger-tint: #fef2f2;
+  --neutral-text: #525252;
+  --neutral-tint: #f5f5f5;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 6%), 0 8px 24px rgb(0 0 0 / 6%);
+}
+
+/* The patient sheet is printed: always light, black text, no backgrounds. */
+@media print {
+  :root,
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface-1: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #ffffff;
+    --border: #000000;
+    --border-strong: #000000;
+    --text: #000000;
+    --text-muted: #000000;
+    --brand-text: #000000;
+    --shadow-card: none;
+  }
+}
