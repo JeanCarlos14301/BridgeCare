@@ -17,7 +17,7 @@ function render(element: React.ReactNode) {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  document.body.innerHTML = "";
+  document.body.replaceChildren();
 });
 
 describe("review UI", () => {
@@ -40,7 +40,13 @@ describe("review UI", () => {
     const view = render(
       <SourcePanel
         documents={[{ document_id: "d", title: "Source", pages: [{ page: 1, text: "Before exact quote after" }] }]}
-        selected={{ document_id: "d", page: 1, quote: "exact quote" }}
+        selection={{
+          fieldKey: "medications[0]",
+          citations: [{ document_id: "d", page: 1, quote: "exact quote" }],
+          index: 0,
+          state: "supported",
+          nonce: 1,
+        }}
       />,
     );
     await act(async () => {});

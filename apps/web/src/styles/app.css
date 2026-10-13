@@ -400,12 +400,12 @@ code,
   font-size: var(--text-sm);
 }
 
-/* Workspace */
+/* Workspace: dual-pane citation inspector */
 
-.workspace {
+.inspector {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -415,9 +415,47 @@ code,
   min-width: 0;
 }
 
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-1);
+}
+
+.inspector-tabs .segment {
+  justify-content: center;
+}
+
+.inspector-tabs .segment[aria-selected="true"] {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+@media (max-width: 1023.98px) {
+  .inspector[data-tab="fields"] .pane-source,
+  .inspector[data-tab="source"] .pane-fields {
+    display: none;
+  }
+
+  .source-panel .window-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
 @media (min-width: 1024px) {
-  .workspace {
+  .inspector {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .inspector-tabs,
+  .back-to-fields {
+    display: none;
   }
 
   .source-panel {
@@ -426,7 +464,7 @@ code,
   }
 
   .source-panel .window-body {
-    max-height: calc(100vh - 8rem);
+    max-height: calc(100vh - 11rem);
     overflow-y: auto;
   }
 }
@@ -518,12 +556,73 @@ code,
   font-weight: 600;
 }
 
+.back-to-fields {
+  margin-left: auto;
+}
+
+.inspector-status {
+  margin: var(--space-3) var(--space-4) 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-bubble);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.inspector-status.is-missing {
+  border-color: var(--danger);
+  color: var(--danger-text);
+}
+
 mark {
+  color: var(--text);
+}
+
+.citation-mark {
   padding: .05em .15em;
   border-radius: var(--radius-md);
+  scroll-margin: 4rem;
+  animation: mark-glow .6s ease-out;
+}
+
+.citation-mark:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mark-success {
+  --mark-ring: var(--success);
+  background: var(--success-tint);
+  box-shadow: 0 0 0 1px var(--success);
+}
+
+.mark-warning {
+  --mark-ring: var(--warning);
   background: var(--warning-tint);
-  color: var(--text);
   box-shadow: 0 0 0 1px var(--warning);
+}
+
+.mark-neutral {
+  --mark-ring: var(--neutral);
+  background: var(--neutral-tint);
+  box-shadow: 0 0 0 1px var(--neutral);
+}
+
+@keyframes mark-glow {
+  from {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 .6rem color-mix(in srgb, var(--mark-ring) 45%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .citation-mark {
+    animation: none;
+  }
 }
 
 /* Gate */
@@ -622,6 +721,50 @@ mark {
 
 .state-conflicting {
   border-left-color: var(--danger);
+}
+
+.field-card,
+.compact-field {
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+
+.field-card.is-selected,
+.compact-field.is-selected {
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: var(--surface-1);
+}
+
+.field-name-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.field-name-button:hover {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+.hint {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+kbd,
+.kbd-chip {
+  padding: 0 .35em;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .field-heading {
@@ -927,10 +1070,16 @@ th {
     background: #fff;
   }
 
+  /* Print width is below the tab breakpoint; the patient sheet must print whichever tab is open. */
+  .inspector .pane-fields {
+    display: block !important;
+  }
+
   .topbar,
   .skip-link,
   .case-strip,
   .live-region,
+  .inspector-tabs,
   .source-panel,
   .gate,
   .fields-panel,
@@ -942,7 +1091,7 @@ th {
   }
 
   .page,
-  .workspace,
+  .inspector,
   .workspace-side,
   .card,
   .printable {

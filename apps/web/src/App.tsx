@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   api,
   type CaseView,
-  type Citation,
   type Fixture,
   isConflict,
   postJson,
@@ -12,14 +11,13 @@ import {
 } from "./api";
 import { AppShell } from "./components/AppShell";
 import { CaseHeader } from "./components/CaseHeader";
-import { FieldsPanel } from "./components/FieldsPanel";
+import { CitationInspector } from "./components/CitationInspector";
 import { FixturePicker } from "./components/FixturePicker";
 import { GatePanel } from "./components/GatePanel";
 import { LoginDialog } from "./components/LoginDialog";
 import { PatientSheet } from "./components/PatientSheet";
 import { ProviderPill } from "./components/ProviderPill";
 import { ReviewBar } from "./components/ReviewBar";
-import { SourcePanel } from "./components/SourcePanel";
 
 type Session = { role: Role };
 
@@ -27,7 +25,6 @@ export default function App() {
   const [providerMode, setProviderMode] = useState<ProviderMode | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [caseView, setCaseView] = useState<CaseView | null>(null);
-  const [selected, setSelected] = useState<Citation | null>(null);
   const [role, setRole] = useState<Role>("visitor");
   const [resolutionNote, setResolutionNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -54,7 +51,6 @@ export default function App() {
       const created = await postJson<CaseView>("/cases/from-fixture", { fixture_id: fixtureId });
       const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" });
       setCaseView(processed);
-      setSelected(null);
       setResolutionNote("");
       setMessage(null);
     } catch (error) {
@@ -82,7 +78,6 @@ export default function App() {
       // Clear the case view on logout so the next person does not see it (B-12.6).
       setRole("visitor");
       setCaseView(null);
-      setSelected(null);
       setResolutionNote("");
       setMessage("Logged out.");
     }
@@ -160,23 +155,26 @@ export default function App() {
 
       {caseView &&
         (revision ? (
-          <div className="workspace">
-            <SourcePanel documents={caseView.source_documents} selected={selected} />
-            <div className="workspace-side">
-              <GatePanel gate={revision.gate} />
-              <FieldsPanel revision={revision} selected={selected} onSelect={setSelected} />
-              <ReviewBar
-                role={role}
-                revision={revision}
-                review={caseView.review}
-                note={resolutionNote}
-                onNoteChange={setResolutionNote}
-                onDecide={review}
-                busy={busy}
-              />
-              <PatientSheet key={`${revision.revision_id}-${caseView.status}`} caseId={caseView.case_id} />
-            </div>
-          </div>
+          <CitationInspector
+            key={revision.revision_id}
+            documents={caseView.source_documents}
+            revision={revision}
+            before={<GatePanel gate={revision.gate} />}
+            after={
+              <>
+                <ReviewBar
+                  role={role}
+                  revision={revision}
+                  review={caseView.review}
+                  note={resolutionNote}
+                  onNoteChange={setResolutionNote}
+                  onDecide={review}
+                  busy={busy}
+                />
+                <PatientSheet key={`${revision.revision_id}-${caseView.status}`} caseId={caseView.case_id} />
+              </>
+            }
+          />
         ) : (
           <p className="alert">Processing did not produce a reviewable revision.</p>
         ))}

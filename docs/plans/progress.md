@@ -50,7 +50,42 @@ Open: no reference screenshots of evolus.ai (no built-in browser in this session
 
 ## WP2 - Citation Inspector
 
-Not started.
+Branch: `feat/wp2-citation-inspector` (on top of WP1, which it depends on). Iteration 1.
+
+- [x] Two columns at >= 1024 px (source sticky with its own scroll); tabs "Fields / Source" below,
+      with arrow-key navigation. Selecting a citation on a small screen opens the Source tab, and
+      "Back to field" returns focus to the chip.
+- [x] Every chip and every field card selects a citation; the field name is a real button so the
+      card action is keyboard-reachable without nesting buttons.
+- [x] Highlight: one `<mark>` coloured by evidence state (green supported, amber
+      ambiguous/conflicting), 600 ms `box-shadow` glow, no animation under reduced motion,
+      `scrollIntoView` (`auto` under reduced motion, `smooth` otherwise), focus moved to the mark,
+      `aria-live="polite"` text "Showing quote on page N".
+- [x] `src/lib/normalize.ts` mirrors `normalize()` from `validation.py`, using the exact whitespace
+      set of Python's `str.isspace()` (listed from the project's Python runtime), and maps normalized
+      offsets back to the original text (B-12.4). Matching is case-sensitive, like the backend.
+- [x] Several citations: chips `p. 1`, `p. 2`; `[` and `]` cycle them (ignored while typing).
+- [x] Unlocatable quote: "Quote not located in this view." and no highlight.
+- [x] Text rendered only as React children.
+
+Gate results (iteration 1):
+
+| Command | Exit |
+| --- | --- |
+| `npm --prefix ./apps/web run lint` | 0 |
+| `npm --prefix ./apps/web run typecheck` | 0 |
+| `npm --prefix ./apps/web test -- --run` | 0 (12/12) |
+| `npm --prefix ./apps/web run build` | 0 |
+| `awk 'length > 120'` over `apps/web/src` | no output |
+| `grep -rn dangerouslySetInnerHTML apps/web/src` | no output |
+
+Test strength: two temporary mutations were caught and reverted. Using JavaScript's `\s` instead of
+the Python whitespace set fails 1 test; skipping normalization in `locateQuote` fails 4 tests.
+
+Browser check (headless Edge, mock, fx04 contradictory): chip `p. 1` highlights exactly one mark on
+page 1 ("Take Lisinopril 10 mg by mouth once a day for 14 days."), chip `p. 2` exactly one mark on
+page 2 ("Continue Lisinopril 20 mg ..."); both amber, both focused, status "Showing quote on page N
+(k of 2)". At 375 px the Source tab opens, no horizontal scroll.
 
 ## Questions for the humans (section 8)
 
