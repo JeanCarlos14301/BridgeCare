@@ -35,7 +35,7 @@ The assisted workflow measures the end-to-end time of AI extraction plus human c
 1. **Model Extraction Phase**:
    - The case is ingested and processed via `POST /cases/{id}/process`.
    - Latencies are recorded automatically:
-     - `revision.timings.model_ms`: Pure LLM inference latency on AMD Token Factory GPUs.
+     - `revision.timings.model_ms`: Wall time of the provider call (network plus inference on AMD Token Factory), measured by the API.
      - `revision.timings.total_ms`: Total server extraction, prompt assembly, and gate validation time.
 2. **Clinician Review Phase (Server-Timed)**:
    - When the reviewer opens the case in the review interface (`GET /cases/{id}` while in `needs_review`), the server records `review_timers.opened_at`.
