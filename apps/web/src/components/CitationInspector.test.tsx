@@ -94,7 +94,7 @@ describe("citation inspector", () => {
     expect(found[0].closest("[data-page]")?.getAttribute("data-page")).toBe("2");
     expect(found[0].className).toContain("mark-warning");
     expect(document.activeElement).toBe(found[0]);
-    expect(status(view.node)).toBe("Showing quote on page 2 (2 of 2).");
+    expect(status(view.node)).toBe("Showing quote on page 2 (2 of 2). Conflicting evidence.");
     view.root.unmount();
   });
 
@@ -138,6 +138,45 @@ describe("citation inspector", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "[" }));
     });
     expect(page()).toBe("1");
+    view.root.unmount();
+  });
+
+  it("accepts AltGr for the shortcut but not plain Ctrl, and ignores it while a dialog is open", () => {
+    const view = render(<CitationInspector documents={documents} revision={makeRevision(conflicting)} />);
+    const page = () => marks(view.node)[0]?.closest("[data-page]")?.getAttribute("data-page");
+    const press = (init: KeyboardEventInit) =>
+      act(() => {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "]", ...init }));
+      });
+
+    click(view.node.querySelector(".field-name-button"));
+    press({ ctrlKey: true });
+    expect(page()).toBe("1");
+    press({ ctrlKey: true, altKey: true });
+    expect(page()).toBe("2");
+
+    const dialog = document.createElement("dialog");
+    dialog.setAttribute("open", "");
+    document.body.append(dialog);
+    press({});
+    expect(page()).toBe("2");
+    view.root.unmount();
+  });
+
+  it("returns to the chip with Escape on the highlight", async () => {
+    const view = render(<CitationInspector documents={documents} revision={makeRevision(conflicting)} />);
+    const chip = view.node.querySelector('button[aria-label="Show quote on page 2"]');
+    click(chip);
+    expect(view.node.querySelector("#pane-source")?.hasAttribute("hidden")).toBe(false);
+    expect(view.node.querySelector("#pane-fields")?.hasAttribute("hidden")).toBe(true);
+
+    act(() => {
+      marks(view.node)[0].dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    await act(() => new Promise((resolve) => window.requestAnimationFrame(resolve)));
+
+    expect(view.node.querySelector("#pane-fields")?.hasAttribute("hidden")).toBe(false);
+    expect(document.activeElement).toBe(chip);
     view.root.unmount();
   });
 });

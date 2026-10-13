@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   api,
@@ -29,6 +29,8 @@ export default function App() {
   const [resolutionNote, setResolutionNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Bumped on logout so responses to requests started before it are dropped (B-12.6).
+  const sessionEpoch = useRef(0);
 
   useEffect(() => {
     // The MOCK badge must be visible before any case is processed (B-12.1).
@@ -45,18 +47,21 @@ export default function App() {
   }, []);
 
   const createAndProcess = async (fixtureId: string) => {
+    const epoch = sessionEpoch.current;
     setBusy(true);
     setMessage("Processing case…");
     try {
       const created = await postJson<CaseView>("/cases/from-fixture", { fixture_id: fixtureId });
       const processed = await api<CaseView>(`/cases/${created.case_id}/process`, { method: "POST" });
+      if (epoch !== sessionEpoch.current) return;
       setCaseView(processed);
       setResolutionNote("");
       setMessage(null);
     } catch (error) {
+      if (epoch !== sessionEpoch.current) return;
       setMessage(isConflict(error) ? "This case is already processing." : "The case could not be processed.");
     } finally {
-      setBusy(false);
+      if (epoch === sessionEpoch.current) setBusy(false);
     }
   };
 
@@ -72,14 +77,25 @@ export default function App() {
   };
 
   const logout = async () => {
+    // Clear the case view on logout so the next person does not see it (B-12.6), even if the
+    // request fails; the role only drops to visitor once the server has revoked the session.
+    sessionEpoch.current += 1;
+    setCaseView(null);
+    setResolutionNote("");
+    setBusy(false);
     try {
       await api<void>("/session/logout", { method: "POST" });
-    } finally {
-      // Clear the case view on logout so the next person does not see it (B-12.6).
-      setRole("visitor");
-      setCaseView(null);
-      setResolutionNote("");
-      setMessage("Logged out.");
+    } catch {
+      setMessage("Logout failed. You are still logged in as a reviewer; try again.");
+      return;
+    }
+    setRole("visitor");
+    setMessage("Logged out.");
+    // Logout revokes the session cookie; start a fresh visitor session for the next case.
+    try {
+      setRole((await api<Session>("/session", { method: "POST" })).role);
+    } catch {
+      setMessage("Logged out. Reload the page to start a new session.");
     }
   };
 
@@ -96,6 +112,7 @@ export default function App() {
       );
       return;
     }
+    const epoch = sessionEpoch.current;
     setBusy(true);
     try {
       const updated = await postJson<CaseView>(`/cases/${caseView.case_id}/review`, {
@@ -104,16 +121,18 @@ export default function App() {
         decision,
         resolution_note: resolutionNote || null,
       });
+      if (epoch !== sessionEpoch.current) return;
       setCaseView(updated);
       setMessage(decision === "approve" ? "Revision approved." : "Revision rejected.");
     } catch (error) {
+      if (epoch !== sessionEpoch.current) return;
       setMessage(
         isConflict(error)
           ? "Review conflict: this revision is stale or blocked. Reload and review the current revision."
           : "The review could not be saved.",
       );
     } finally {
-      setBusy(false);
+      if (epoch === sessionEpoch.current) setBusy(false);
     }
   };
 
@@ -131,7 +150,10 @@ export default function App() {
     );
 
   return (
-    <AppShell status={<ProviderPill mode={providerMode} revision={revision} />} session={session}>
+    <AppShell
+      status={<ProviderPill mode={providerMode ?? revision?.provider_mode ?? null} revision={revision} />}
+      session={session}
+    >
       <section className="case-strip" aria-labelledby="strip-title">
         <p className="eyebrow">Synthetic discharge documents</p>
         <h1 id="strip-title">

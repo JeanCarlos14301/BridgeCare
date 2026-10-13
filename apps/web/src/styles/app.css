@@ -415,6 +415,11 @@ code,
   min-width: 0;
 }
 
+/* `hidden` must win over the panes' own display values (inactive tab on small screens). */
+.inspector-pane[hidden] {
+  display: none;
+}
+
 .inspector-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -436,11 +441,6 @@ code,
 }
 
 @media (max-width: 1023.98px) {
-  .inspector[data-tab="fields"] .pane-source,
-  .inspector[data-tab="source"] .pane-fields {
-    display: none;
-  }
-
   .source-panel .window-body {
     max-height: 70vh;
     overflow-y: auto;
@@ -453,8 +453,7 @@ code,
     gap: var(--space-6);
   }
 
-  .inspector-tabs,
-  .back-to-fields {
+  .inspector-tabs {
     display: none;
   }
 
@@ -601,6 +600,17 @@ mark {
   --mark-ring: var(--warning);
   background: var(--warning-tint);
   box-shadow: 0 0 0 1px var(--warning);
+}
+
+/* A second cue besides colour: conflicting quotes get a wavy underline, ambiguous a dotted one. */
+.mark-conflicting {
+  text-decoration: underline wavy var(--danger);
+  text-underline-offset: .25em;
+}
+
+.mark-ambiguous {
+  text-decoration: underline dotted var(--warning);
+  text-underline-offset: .25em;
 }
 
 .mark-neutral {

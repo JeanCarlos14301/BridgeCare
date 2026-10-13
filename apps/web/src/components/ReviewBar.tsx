@@ -23,7 +23,9 @@ export function ReviewBar(props: {
           Revision {props.revision.number} was {currentReview.decision === "approve" ? "approved" : "rejected"}.
         </p>
       )}
-      {props.role === "reviewer" ? (
+      {currentReview ? (
+        <p className="muted">This case is no longer awaiting a decision.</p>
+      ) : props.role === "reviewer" ? (
         <>
           <label className="field-label" htmlFor="resolution-note">
             Resolution note

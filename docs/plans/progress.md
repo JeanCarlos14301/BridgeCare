@@ -87,6 +87,35 @@ page 1 ("Take Lisinopril 10 mg by mouth once a day for 14 days."), chip `p. 2` e
 page 2 ("Continue Lisinopril 20 mg ..."); both amber, both focused, status "Showing quote on page N
 (k of 2)". At 375 px the Source tab opens, no horizontal scroll.
 
+### WP2 iteration 2 - independent review
+
+A reviewer subagent read `git diff main...HEAD -- apps/web` (read-only). Its security checks passed
+(text nodes only, no CDN/inline script, client never sets approval, `revision_id + content_hash`
+sent). All 9 findings were accepted and fixed:
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 1 | Logout cleared the UI even when the server call failed | Role drops to visitor only after the server revokes the session; the case is cleared anyway; failure is reported |
+| 2 | A response in flight could bring the case back after logout | Session epoch; late responses are dropped |
+| 3 | `[` / `]` blocked for AltGr layouts (Spanish, German, French) | Ctrl+Alt is treated as AltGr; plain Ctrl or Alt chords are ignored |
+| 4 | Focus jump to the mark lost the keyboard user's place on desktop | "Back to field" shown at every width; Escape on the mark returns focus to the chip |
+| 5 | `scrollIntoView` also scrolled the page | Only the pane's scroll box is scrolled; the pane is revealed with `block: "nearest"` |
+| 6 | Shortcut acted in a hidden pane and while a dialog was open | Cycling opens the Source tab; ignored while any `dialog[open]` exists |
+| 7 | Incomplete tab pattern | Tabs exist only below 1024 px, with `tabpanel`, `aria-labelledby`, `hidden`, Home/End |
+| 8 | MOCK badge depended only on `/health` | Falls back to `revision.provider_mode` |
+| 9 | Highlight relied on colour for evidence state | Status line names the state; wavy underline for conflicting, dotted for ambiguous |
+
+Also fixed: after logout the backend revokes the cookie, so the next fixture request returned 401;
+the UI now starts a fresh visitor session. Decision controls are hidden once the case is no longer
+`needs_review` (the backend only accepts decisions in that state).
+
+Gates (iteration 2): lint 0, typecheck 0, tests 0 (17/17), build 0, no line > 120, no
+`dangerouslySetInnerHTML`. Mutations caught: removing the epoch check fails 1 test; swallowing the
+logout failure fails 1 test. Browser (production build with the nginx CSP header): no CSP errors;
+at 1440 px clicking the last warning-sign chip leaves `scrollY` and the chip position unchanged while
+the mark is visible and focused; at 375 px tabs and `tabpanel` roles work and Escape returns focus to
+the chip.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of
