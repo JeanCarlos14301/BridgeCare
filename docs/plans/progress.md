@@ -43,7 +43,7 @@ Browser checks (headless Edge 155 driven over CDP, mock provider):
 - CSP: Docker Desktop was not running, so `docker compose up --build` was not run. Instead the
   production build (`dist/`) was served by a local Node server that sends the exact
   `Content-Security-Policy` header from `infra/nginx.conf` and proxies `/api`. Result: zero CSP
-  violations in the console. **Still to do:** repeat through nginx with Docker running.
+  violations in the console. Repeated through nginx afterwards; see "Release gate" below.
 
 Open: no reference screenshots of evolus.ai (no built-in browser in this session); notes in
 `docs/plans/design-notes.md` come from a text fetch plus Annex A.
@@ -115,6 +115,36 @@ logout failure fails 1 test. Browser (production build with the nginx CSP header
 at 1440 px clicking the last warning-sign chip leaves `scrollY` and the chip position unchanged while
 the mark is visible and focused; at 375 px tabs and `tabpanel` roles work and Escape returns focus to
 the chip.
+
+## Release gate (7.3) on `feat/wp2-citation-inspector`
+
+Run on 2026-10-12 with Docker 29.8.1, mock provider, a throwaway reviewer password passed only as
+an environment variable.
+
+| Check | Result |
+| --- | --- |
+| Web gates (7.1) | lint 0, typecheck 0, tests 0 (17/17), build 0 |
+| `ruff check apps/api scripts` | 0 |
+| `mypy apps/api/app` | 0 (30 files) |
+| `pytest apps/api/tests` | 0 (72 passed) |
+| `export_contract.py --check` | 0 (contract current) |
+| `eval/check_fixtures.py` | 0 (6 fixtures) |
+| `docker compose up --build -d` | api healthy, web started |
+| `scripts/smoke.py` | 0 (`health=ok ready=ready`, `provider_mode=mock`) |
+| nginx headers on `/` | CSP, HSTS, nosniff, `Referrer-Policy: no-referrer` present |
+
+Annex D walkthrough through nginx (`http://localhost:5173`, headless Edge, 1440 px): MOCK pill
+visible; fx04 gate "Resolution note required (1 reason)"; chip `p. 1` and `p. 2` each highlight
+exactly one quote on the right page; reviewer login, note, approve gives "Approved"; patient sheet
+shows Medications, Follow-up, Warning signs; fx05 stays "Needs review" with the injected sentence
+shown as plain text; fx06 shows "Failed" with `provider_error`; logout clears the case. At 375 px a
+chip opens the Source tab with one highlight.
+
+Console: no CSP violations from the app. One run showed two blocked loads from
+`me.kis.v2.scr.kaspersky-labs.com` (a script and a stylesheet injected by the antivirus on the
+test machine); the CSP blocked them as intended. The served files contain no reference to them;
+the only absolute URLs in the bundle are React's `w3.org` namespace and `react.dev` error links,
+which are never fetched.
 
 ## Questions for the humans (section 8)
 
