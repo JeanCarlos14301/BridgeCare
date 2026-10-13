@@ -5,7 +5,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from sqlalchemy import text
 from sqlalchemy.engine import CursorResult, Engine
@@ -31,6 +31,7 @@ from app.schemas.domain import (
     SourceDocument,
 )
 from app.services.fixtures import FixtureCatalog
+from app.services.localization import localize_patient_view
 from app.services.validation import (
     MIN_DOCUMENT_CHARACTERS,
     document_text_length,
@@ -40,6 +41,9 @@ from app.services.validation import (
 )
 
 MIN_RESOLUTION_NOTE = 10
+MAX_VISITOR_PROCESSINGS_PER_SESSION = 5
+MAX_VISITOR_PROCESSINGS_PER_MINUTE = 2
+VISITOR_RATE_WINDOW_SECONDS = 60.0
 PATIENT_NOTICE = (
     "This sheet was prepared with AI assistance and approved by a care team reviewer. "
     "Follow your care team's instructions and contact them with any questions."
@@ -105,6 +109,45 @@ class CaseService:
         self.provider = provider
         # One processing job per API instance.
         self._processing = asyncio.Lock()
+        # Track processing timestamps per visitor session to protect Token Factory quota.
+        self._visitor_processings: dict[str, list[float]] = {}
+
+    def _check_and_record_visitor_processing(self, session: SessionInfo) -> None:
+        if session.role != "visitor":
+            return
+        now = time.monotonic()
+        history = self._visitor_processings.setdefault(session.id, [])
+        if len(history) >= MAX_VISITOR_PROCESSINGS_PER_SESSION:
+            raise DomainError(
+                "Visitor processing limit reached (maximum 5 runs per session). "
+                "Please log in as a reviewer for unlimited access.",
+                status_code=429,
+            )
+        recent = [t for t in history if now - t <= VISITOR_RATE_WINDOW_SECONDS]
+        if len(recent) >= MAX_VISITOR_PROCESSINGS_PER_MINUTE:
+            raise DomainError(
+                "Processing rate limit exceeded. Please wait a moment before trying again.",
+                status_code=429,
+            )
+        history.append(now)
+
+    def record_review_opened(
+        self, db: Session, case: CaseRow, reviewer: SessionInfo
+    ) -> None:
+        if (
+            reviewer.role != "reviewer"
+            or case.status != "needs_review"
+            or case.current_revision_id is None
+        ):
+            return
+        db.execute(
+            text(
+                "INSERT OR IGNORE INTO review_timers (revision_id, opened_at) "
+                "VALUES (:revision_id, :now)"
+            ),
+            {"revision_id": case.current_revision_id, "now": _now()},
+        )
+        db.commit()
 
     # --- reads ---
 
@@ -157,7 +200,8 @@ class CaseService:
             return None
         row = db.execute(
             text(
-                "SELECT revision_id, content_hash, decision, resolution_note, created_at "
+                "SELECT revision_id, content_hash, decision, resolution_note, created_at, "
+                "opened_at, duration_ms "
                 "FROM reviews WHERE revision_id = :revision_id "
                 "ORDER BY created_at DESC LIMIT 1"
             ),
@@ -171,6 +215,8 @@ class CaseService:
             decision=row["decision"],
             resolution_note=row["resolution_note"],
             reviewed_at=row["created_at"],
+            opened_at=datetime.fromisoformat(row["opened_at"]) if row["opened_at"] else None,
+            duration_ms=row["duration_ms"],
         )
 
     def _source_documents(self, fixture_id: str) -> list[SourceDocument]:
@@ -291,7 +337,11 @@ class CaseService:
             raise DomainError("Revision is stale; reload the case", status_code=409)
         db.commit()
 
-    async def process(self, db: Session, case: CaseRow) -> None:
+    async def process(
+        self, db: Session, case: CaseRow, session: SessionInfo | None = None
+    ) -> None:
+        if session is not None:
+            self._check_and_record_visitor_processing(session)
         if self._processing.locked():
             raise DomainError("Another case is being processed; try again shortly", status_code=409)
         claimed = _rowcount(db.execute(
@@ -413,6 +463,19 @@ class CaseService:
                 )
         new_status = "approved" if request.decision == "approve" else "rejected"
         now = _now()
+        timer_row = db.execute(
+            text("SELECT opened_at FROM review_timers WHERE revision_id = :revision_id"),
+            {"revision_id": revision.id},
+        ).mappings().one_or_none()
+        opened_at_str = (
+            timer_row["opened_at"]
+            if timer_row is not None and timer_row["opened_at"]
+            else revision.created_at
+        )
+        opened_dt = datetime.fromisoformat(opened_at_str)
+        now_dt = datetime.fromisoformat(now)
+        duration_ms = max(round((now_dt - opened_dt).total_seconds() * 1000, 2), 0.0)
+
         updated = _rowcount(db.execute(
             text(
                 "UPDATE cases SET status = :status, updated_at = :now WHERE id = :id "
@@ -426,8 +489,9 @@ class CaseService:
         db.execute(
             text(
                 "INSERT INTO reviews (id, case_id, revision_id, content_hash, decision, "
-                "resolution_note, reviewer_session_id, created_at) VALUES (:id, :case_id, "
-                ":revision_id, :hash, :decision, :note, :reviewer, :now)"
+                "resolution_note, reviewer_session_id, created_at, opened_at, duration_ms) "
+                "VALUES (:id, :case_id, :revision_id, :hash, :decision, :note, :reviewer, "
+                ":now, :opened_at, :duration_ms)"
             ),
             {
                 "id": uuid.uuid4().hex,
@@ -438,11 +502,15 @@ class CaseService:
                 "note": note,
                 "reviewer": reviewer.id,
                 "now": now,
+                "opened_at": opened_at_str,
+                "duration_ms": duration_ms,
             },
         )
         db.commit()
 
-    def patient_view(self, db: Session, case: CaseRow) -> PatientView:
+    def patient_view(
+        self, db: Session, case: CaseRow, lang: Literal["en", "es"] = "en"
+    ) -> PatientView:
         revision = self._revision(db, case.current_revision_id)
         review = self._latest_review(db, case.current_revision_id)
         if (
@@ -458,12 +526,13 @@ class CaseService:
             )
         fields = ExtractedFields.model_validate(revision.content["extracted_fields"])
         # Rendered only from validated fields; no model prose reaches the medication table.
-        return PatientView(
+        view = PatientView(
             case_id=case.id,
             revision_id=revision.id,
             content_hash=revision.content_hash,
             approved_at=review.reviewed_at,
             provider_mode=revision.content["provider_mode"],
+            language="en",
             summary=revision.content["patient_draft"].get("summary"),
             medications=[
                 PatientMedicationRow(
@@ -485,3 +554,6 @@ class CaseService:
             diet=fields.diet.text,
             notice=PATIENT_NOTICE,
         )
+        if lang == "es":
+            return localize_patient_view(view, "es")
+        return view

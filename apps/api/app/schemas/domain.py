@@ -154,6 +154,8 @@ class ReviewRecord(BaseModel):
     decision: Literal["approve", "reject"]
     resolution_note: str | None
     reviewed_at: datetime
+    opened_at: datetime | None = None
+    duration_ms: float | None = None
 
 
 class CaseView(BaseModel):
@@ -213,6 +215,7 @@ class PatientView(BaseModel):
     content_hash: str
     approved_at: datetime
     provider_mode: ProviderMode
+    language: Literal["en", "es"] = "en"
     summary: str | None
     medications: list[PatientMedicationRow]
     follow_up: list[PatientFollowUp]
