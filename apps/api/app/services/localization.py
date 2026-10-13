@@ -4,8 +4,9 @@ from typing import Literal
 from app.schemas.domain import PatientFollowUp, PatientMedicationRow, PatientView
 
 SPANISH_NOTICE = (
-    "Esta hoja fue preparada con asistencia de IA y aprobada por un revisor del equipo de atención. "
-    "Siga las instrucciones de su equipo médico y contáctelos ante cualquier duda."
+    "Esta hoja fue preparada con asistencia de IA y aprobada por un revisor del "
+    "equipo de atención. Siga las instrucciones de su equipo médico y contáctelos "
+    "ante cualquier duda."
 )
 
 ROUTE_MAP_ES: dict[str, str] = {
@@ -84,13 +85,16 @@ DIET_MAP_ES: dict[str, str] = {
 
 SUMMARY_MAP_ES: dict[str, str] = {
     "your instructions include two medicines, follow-up, and warning signs to watch for.": (
-        "Sus instrucciones incluyen dos medicamentos, citas de seguimiento y signos de alarma a los que debe prestar atención."
+        "Sus instrucciones incluyen dos medicamentos, citas de seguimiento y signos de alarma "
+        "a los que debe prestar atención."
     ),
     "follow care instructions for wound dressing and medication schedule.": (
-        "Siga las instrucciones de cuidado para las curaciones de la herida y el horario de sus medicamentos."
+        "Siga las instrucciones de cuidado para las curaciones de la herida y el horario "
+        "de sus medicamentos."
     ),
     "take medications as prescribed and attend scheduled follow-up visits.": (
-        "Tome los medicamentos según lo prescrito y asista a sus visitas de seguimiento programadas."
+        "Tome los medicamentos según lo prescrito y asista a sus visitas de seguimiento "
+        "programadas."
     ),
 }
 
@@ -145,7 +149,11 @@ def _translate_instruction(text: str | None) -> str | None:
     cleaned = text.strip()
     lowered = cleaned.lower()
 
-    if "primary care clinician" in lowered or "primary care physician" in lowered or "pcp" in lowered:
+    if (
+        "primary care clinician" in lowered
+        or "primary care physician" in lowered
+        or "pcp" in lowered
+    ):
         return "Consulte o programe una cita con su médico o profesional de atención primaria"
     if "follow-up" in lowered or "follow up" in lowered:
         return "Coordine una cita de seguimiento con su equipo de atención médica"
@@ -163,9 +171,11 @@ def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -
     localized_medications: list[PatientMedicationRow] = []
     for med in view.medications:
         # Route localization
-        route_es = ROUTE_MAP_ES.get(med.route.lower().strip(), med.route) if med.route else None
+        route_key = med.route.lower().strip() if med.route else None
+        route_es = ROUTE_MAP_ES.get(route_key, med.route) if route_key else None
         # Frequency localization
-        freq_es = FREQUENCY_MAP_ES.get(med.frequency.lower().strip(), med.frequency) if med.frequency else None
+        freq_key = med.frequency.lower().strip() if med.frequency else None
+        freq_es = FREQUENCY_MAP_ES.get(freq_key, med.frequency) if freq_key else None
         # Duration localization
         duration_es = _translate_duration(med.duration)
 

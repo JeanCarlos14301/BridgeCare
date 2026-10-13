@@ -370,7 +370,7 @@ def test_visitor_processing_lifetime_cap(client: TestClient) -> None:
 
     # Simulate visitor having already used 5 processing runs in their session
     service = client.app.state.case_service  # type: ignore[attr-defined]
-    session_id = client.get("/cases").json()
+    client.get("/cases")
     # Populate visitor processings with 5 runs in the past
     for _sess_id in list(service._visitor_processings.keys()) or ["fallback"]:
         service._visitor_processings[_sess_id] = [0.0, 0.0, 0.0, 0.0, 0.0]
