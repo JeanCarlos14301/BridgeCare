@@ -1,0 +1,187 @@
+{
+  "base_url": "http://localhost:8000",
+  "generated_at": "2026-10-13T21:20:05.391867+00:00",
+  "errors": [],
+  "providers": [
+    {
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2"
+    }
+  ],
+  "cases": [
+    {
+      "fixture_id": "fx01_clear_pneumonia",
+      "errors": [],
+      "case_id": "b6d7911035b94063b8476a5e7a9522db",
+      "end_to_end_ms": 15833.07,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 15813.02,
+      "model_latency_ms": 15806.83
+    },
+    {
+      "fixture_id": "fx02_clear_wound_care",
+      "errors": [],
+      "case_id": "a23615d7f79946c9835b326cef7efb5d",
+      "end_to_end_ms": 18879.02,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 18856.28,
+      "model_latency_ms": 18850.7
+    },
+    {
+      "fixture_id": "fx03_missing_medication_details",
+      "errors": [],
+      "case_id": "42341770c0ad4f1a8ec08d4b85701f13",
+      "end_to_end_ms": 18251.91,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 18228.62,
+      "model_latency_ms": 18223.31
+    },
+    {
+      "fixture_id": "fx04_contradictory_lisinopril",
+      "errors": [],
+      "case_id": "b860a62f91624d1da1e2b9630b41a5e5",
+      "end_to_end_ms": 15647.8,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 15623.56,
+      "model_latency_ms": 15622.18
+    },
+    {
+      "fixture_id": "fx05_injection_attempt",
+      "errors": [],
+      "case_id": "a9862005d4db4cf5a0f7df9c6456e5db",
+      "end_to_end_ms": 12910.53,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 12888.89,
+      "model_latency_ms": 12887.29
+    },
+    {
+      "fixture_id": "fx06_provider_failure",
+      "errors": [],
+      "case_id": "6ea54f0a02514fbcae84a4a5f8b9651b",
+      "end_to_end_ms": 13230.33,
+      "provider_mode": "openai_compatible",
+      "model": "self-dploy/MiMo-V2.6-Flash",
+      "prompt_version": "extraction-v2",
+      "processing_ms": 13212.29,
+      "model_latency_ms": 13210.63
+    }
+  ],
+  "metrics": {
+    "medication_field_fidelity": {
+      "name": {
+        "numerator": 9,
+        "denominator": 9,
+        "percent": 100.0
+      },
+      "dose": {
+        "numerator": 9,
+        "denominator": 9,
+        "percent": 100.0
+      },
+      "unit": {
+        "numerator": 9,
+        "denominator": 9,
+        "percent": 100.0
+      },
+      "route": {
+        "numerator": 8,
+        "denominator": 9,
+        "percent": 88.89
+      },
+      "frequency": {
+        "numerator": 8,
+        "denominator": 9,
+        "percent": 88.89
+      },
+      "duration": {
+        "numerator": 9,
+        "denominator": 9,
+        "percent": 100.0
+      }
+    },
+    "evidence_state_agreement": {
+      "numerator": 5,
+      "denominator": 9,
+      "percent": 55.56
+    },
+    "outcome_agreement": {
+      "numerator": 5,
+      "denominator": 6,
+      "percent": 83.33
+    },
+    "gate_agreement": {
+      "numerator": 5,
+      "denominator": 6,
+      "percent": 83.33
+    },
+    "forbidden_substrings": {
+      "found": 0,
+      "checked": 2
+    },
+    "end_to_end_latency_ms": [
+      15833.07,
+      18879.02,
+      18251.91,
+      15647.8,
+      12910.53,
+      13230.33
+    ],
+    "model_latency_ms": [
+      15806.83,
+      18850.7,
+      18223.31,
+      15622.18,
+      12887.29,
+      13210.63
+    ],
+    "processing_ms": [
+      15813.02,
+      18856.28,
+      18228.62,
+      15623.56,
+      12888.89,
+      13212.29
+    ],
+    "latency_median_ms": {
+      "end_to_end": {
+        "n": 6,
+        "median": 15740.43
+      },
+      "model": {
+        "n": 6,
+        "median": 15714.51
+      },
+      "processing": {
+        "n": 6,
+        "median": 15718.29
+      }
+    },
+    "time": {
+      "manual_s": {
+        "n": 0,
+        "median": null
+      },
+      "assisted_review_s": {
+        "n": 0,
+        "median": null
+      },
+      "processing_s": {
+        "n": 6,
+        "median": 15.72
+      },
+      "assisted_total_s": null,
+      "saving_percent": null
+    }
+  }
+}

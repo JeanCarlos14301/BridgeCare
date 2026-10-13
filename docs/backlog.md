@@ -16,7 +16,7 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-07 Review UI | First version; gaps in B-12 | Edgar |
 | B-08 Safety tests | Done for the backend (72 tests) | Daniel |
 | B-09 Evaluation report | Harness reports provider, latency medians and time from `eval/baseline.json`; real-provider report and manual baseline runs pending | Felipe |
-| B-10 Real inference on AMD Token Factory | Done for one case on the Azure VM (`DeepSeek-V4-Flash`, `extraction-v2`); full fixture eval pending | Felipe |
+| B-10 Real inference on AMD Token Factory | First real eval on 6 fixtures, prompt `extraction-v2` (`eval/reports/20261013T211552Z`, `20261013T212005Z`): `MiMo-V2.6-Flash` 52/54 medication fields, 0 failures, median model 15.7 s; `DeepSeek-V4-Flash` 45/48, fx04 `schema_invalid` once (4 later runs valid), median 19.9 s. Prompt iteration pending | Felipe |
 | B-11 Review time measurement | Backend done (`review.duration_ms`); UI shows review time | Daniel |
 | B-12 UI completion | Items 1, 2, 3, 4, 5, 6 done; 7 (draft editing) and the Spanish toggle pending | Edgar |
 | B-13 Public HTTPS deployment | Done: Azure VM live with real AMD inference (15/15 checks); Cloudflare tunnel as backup | Jean |
