@@ -1,0 +1,139 @@
+/* Keyframes. Motion is short and quiet; it uses transform, opacity, box-shadow, or stroke only. */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+
+  25% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes unlock {
+  0% {
+    transform: rotate(0);
+  }
+
+  40% {
+    transform: rotate(-10deg);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes mark-glow {
+  from {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 .5rem color-mix(in srgb, var(--mark-ring) 35%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 1px var(--mark-ring), 0 0 0 0 transparent;
+  }
+}
+
+/* Reduced motion: no movement, no delays; content appears in its final state. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spinner,
+  .step-active .step-icon::after,
+  .skeleton-block,
+  .skeleton-line {
+    animation: none !important;
+  }
+
+  .decision-ring,
+  .decision-stroke {
+    stroke-dashoffset: 0;
+  }
+}
