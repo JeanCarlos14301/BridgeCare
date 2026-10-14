@@ -16,17 +16,21 @@ ROUTE_MAP_ES: dict[str, str] = {
     "intravenous": "intravenosa",
     "iv": "intravenosa",
     "topical": "tópica",
+    "topically": "vía tópica",
     "subcutaneous": "subcutánea",
     "subcutaneously": "subcutáneamente",
     "inhalation": "inhalatoria",
     "rectal": "rectal",
     "intramuscular": "intramuscular",
     "im": "intramuscular",
+    "in each nostril": "en cada fosa nasal",
+    "nasal": "vía nasal",
 }
 
 FREQUENCY_MAP_ES: dict[str, str] = {
     "once daily": "una vez al día",
     "once a day": "una vez al día",
+    "once each evening": "una vez cada noche",
     "daily": "al día",
     "twice daily": "dos veces al día",
     "twice a day": "dos veces al día",
@@ -41,11 +45,14 @@ FREQUENCY_MAP_ES: dict[str, str] = {
     "every 8 hours": "cada 8 horas",
     "every 8 hours as needed": "cada 8 horas según sea necesario",
     "every 8 hours as needed for pain": "cada 8 horas según sea necesario para el dolor",
+    "every 8 hours with food": "cada 8 horas con alimentos",
     "every 12 hours": "cada 12 horas",
     "every 24 hours": "cada 24 horas",
     "at bedtime": "al acostarse",
     "with meals": "con las comidas",
+    "with food": "con alimentos",
     "before meals": "antes de las comidas",
+    "in the morning": "por la mañana",
     "as needed": "según sea necesario",
 }
 
@@ -58,6 +65,21 @@ INSTRUCTION_MAP_ES: dict[str, str] = {
     ),
     "follow up with your primary care clinician": (
         "Consulte a su médico de atención primaria para seguimiento"
+    ),
+    "arrange follow-up": (
+        "Coordine una cita de seguimiento"
+    ),
+    "follow up": (
+        "Asista a su cita de seguimiento"
+    ),
+    "follow up with the clinic team": (
+        "Coordine seguimiento con el equipo de la clínica"
+    ),
+    "follow up with your doctor": (
+        "Consulte a su médico para seguimiento"
+    ),
+    "follow-up appointment": (
+        "Cita de seguimiento"
     ),
 }
 
@@ -75,6 +97,10 @@ WARNING_SIGNS_MAP_ES: dict[str, str] = {
     "inability to keep fluids down": "Incapacidad para retener líquidos",
     "severe headache": "Dolor de cabeza intenso",
     "signs of infection": "Signos de infección",
+    "fainting": "Desmayos o pérdida del conocimiento",
+    "swelling of the face": "Hinchazón de la cara",
+    "spreading redness": "Enrojecimiento que se extiende",
+    "drainage with a bad smell": "Secreción o drenaje con mal olor",
 }
 
 ACTIVITY_MAP_ES: dict[str, str] = {
@@ -84,6 +110,8 @@ ACTIVITY_MAP_ES: dict[str, str] = {
     "avoid heavy lifting": "Evite levantar objetos pesados",
     "light activity as tolerated": "Actividad ligera según tolere",
     "resume normal activity as tolerated": "Reanude su actividad normal según tolere",
+    "keep the dressing clean and dry": "Mantenga el vendaje limpio y seco",
+    "keep the dressing clean and dry.": "Mantenga el vendaje limpio y seco.",
 }
 
 DIET_MAP_ES: dict[str, str] = {
@@ -94,6 +122,8 @@ DIET_MAP_ES: dict[str, str] = {
     "regular diet as tolerated": "Dieta regular según tolere",
     "no restrictions.": "Sin restricciones.",
     "no restrictions": "Sin restricciones.",
+    "resume usual meals as tolerated": "Reanude sus comidas habituales según tolere",
+    "resume usual meals as tolerated.": "Reanude sus comidas habituales según tolere.",
 }
 
 SUMMARY_MAP_ES: dict[str, str] = {
@@ -111,6 +141,19 @@ SUMMARY_MAP_ES: dict[str, str] = {
     ),
     "you are going home. rest and watch for the warning signs below.": (
         "Usted va a casa. Descanse y preste atención a los signos de alarma que se indican abajo."
+    ),
+    "follow wound-care instructions, use the listed medicines, and attend follow-up.": (
+        "Siga las instrucciones para el cuidado de heridas, use los medicamentos indicados "
+        "y asista a sus visitas de seguimiento."
+    ),
+    "two medicine instructions have information that is not stated in the document.": (
+        "Dos instrucciones de medicamentos contienen datos no indicados en el documento."
+    ),
+    "the document has two different listed doses for one medicine and needs review.": (
+        "El documento presenta dos dosis diferentes para un medicamento y requiere revisión."
+    ),
+    "one medicine is listed with follow-up and warning signs.": (
+        "Se indica un medicamento junto con citas de seguimiento y signos de alarma."
     ),
 }
 
@@ -172,6 +215,8 @@ def _translate_instruction(text: str | None) -> str | None:
     # Exact standard match without losing specific clinician details
     if lowered in INSTRUCTION_MAP_ES:
         return INSTRUCTION_MAP_ES[lowered]
+    if lowered.rstrip(".") in INSTRUCTION_MAP_ES:
+        return INSTRUCTION_MAP_ES[lowered.rstrip(".")]
     # Keep full instruction text intact to avoid clinical omission
     return f"{cleaned} [en]"
 
@@ -190,14 +235,22 @@ def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -
         # Route localization
         route_key = med.route.lower().strip() if med.route else None
         if route_key:
-            route_es = ROUTE_MAP_ES.get(route_key, f"{med.route} [en]")
+            route_es = (
+                ROUTE_MAP_ES.get(route_key)
+                or ROUTE_MAP_ES.get(route_key.rstrip("."))
+                or f"{med.route} [en]"
+            )
         else:
             route_es = None
 
         # Frequency localization
         freq_key = med.frequency.lower().strip() if med.frequency else None
         if freq_key:
-            freq_es = FREQUENCY_MAP_ES.get(freq_key, f"{med.frequency} [en]")
+            freq_es = (
+                FREQUENCY_MAP_ES.get(freq_key)
+                or FREQUENCY_MAP_ES.get(freq_key.rstrip("."))
+                or f"{med.frequency} [en]"
+            )
         else:
             freq_es = None
 
@@ -227,26 +280,43 @@ def localize_patient_view(view: PatientView, target_lang: Literal["en", "es"]) -
     localized_warning_signs: list[str] = []
     for sign in view.warning_signs:
         sign_cleaned = sign.strip()
-        sign_es = WARNING_SIGNS_MAP_ES.get(sign_cleaned.lower(), f"{sign_cleaned} [en]")
+        sign_key = sign_cleaned.lower()
+        sign_es = (
+            WARNING_SIGNS_MAP_ES.get(sign_key)
+            or WARNING_SIGNS_MAP_ES.get(sign_key.rstrip("."))
+            or f"{sign_cleaned} [en]"
+        )
         localized_warning_signs.append(sign_es)
 
     # Activity & Diet
     if view.activity:
         activity_key = view.activity.strip().lower()
-        activity_es = ACTIVITY_MAP_ES.get(activity_key, f"{view.activity} [en]")
+        activity_es = (
+            ACTIVITY_MAP_ES.get(activity_key)
+            or ACTIVITY_MAP_ES.get(activity_key.rstrip("."))
+            or f"{view.activity} [en]"
+        )
     else:
         activity_es = None
 
     if view.diet:
         diet_key = view.diet.strip().lower()
-        diet_es = DIET_MAP_ES.get(diet_key, f"{view.diet} [en]")
+        diet_es = (
+            DIET_MAP_ES.get(diet_key)
+            or DIET_MAP_ES.get(diet_key.rstrip("."))
+            or f"{view.diet} [en]"
+        )
     else:
         diet_es = None
 
     # Summary
     if view.summary:
         summary_key = view.summary.strip().lower()
-        summary_es = SUMMARY_MAP_ES.get(summary_key, f"{view.summary} [en]")
+        summary_es = (
+            SUMMARY_MAP_ES.get(summary_key)
+            or SUMMARY_MAP_ES.get(summary_key.rstrip("."))
+            or f"{view.summary} [en]"
+        )
     else:
         summary_es = None
 

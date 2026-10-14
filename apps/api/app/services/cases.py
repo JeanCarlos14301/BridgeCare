@@ -114,7 +114,7 @@ class CaseService:
         self._visitor_processings: dict[str, list[float]] = {}
         self._global_visitor_processings: list[float] = []
 
-    def _check_and_record_visitor_processing(self, session: SessionInfo) -> None:
+    def _check_visitor_processing_limit(self, session: SessionInfo) -> None:
         if session.role != "visitor":
             return
         now = time.monotonic()
@@ -141,8 +141,18 @@ class CaseService:
                 "Processing rate limit exceeded. Please wait a moment before trying again.",
                 status_code=429,
             )
+
+    def _record_visitor_processing(self, session: SessionInfo) -> None:
+        if session.role != "visitor":
+            return
+        now = time.monotonic()
+        history = self._visitor_processings.setdefault(session.id, [])
         history.append(now)
         self._global_visitor_processings.append(now)
+
+    def _check_and_record_visitor_processing(self, session: SessionInfo) -> None:
+        self._check_visitor_processing_limit(session)
+        self._record_visitor_processing(session)
 
     def record_review_opened(
         self, db: Session, case: CaseRow, reviewer: SessionInfo
@@ -354,7 +364,7 @@ class CaseService:
         self, db: Session, case: CaseRow, session: SessionInfo | None = None
     ) -> None:
         if session is not None:
-            self._check_and_record_visitor_processing(session)
+            self._check_visitor_processing_limit(session)
         if self._processing.locked():
             raise DomainError("Another case is being processed; try again shortly", status_code=409)
         claimed = _rowcount(db.execute(
@@ -367,6 +377,8 @@ class CaseService:
         db.commit()
         if claimed != 1:
             raise DomainError("Case is already processing", status_code=409)
+        if session is not None:
+            self._record_visitor_processing(session)
         async with self._processing:
             try:
                 await self._run_extraction(db, case)

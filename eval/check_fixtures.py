@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "fixtures" / "discharge"
@@ -17,7 +15,12 @@ MOCK_BEHAVIORS = {"respond", "timeout", "invalid_json"}
 EVIDENCE_STATES = {"supported", "missing", "ambiguous", "conflicting"}
 OUTCOMES = {"approvable", "requires_resolution", "failed"}
 BLOCK_REASONS = {
-    "schema_invalid", "citation_not_found", "conflicting_field", "insufficient_text", "provider_error", "truncated_output",
+    "schema_invalid",
+    "citation_not_found",
+    "conflicting_field",
+    "insufficient_text",
+    "provider_error",
+    "truncated_output",
 }
 MEDICATION_FIELDS = ("name", "dose", "unit", "route", "frequency", "duration")
 REQUIRED_IDS = {
@@ -151,11 +154,19 @@ def check_fixture(folder: Path, errors: list[str]) -> None:
         mock = load_json(mock_path, errors)
         if not isinstance(mock, dict):
             return
-        page_text = {page["page"]: normalize(page["text"]) for page in pages if isinstance(page, dict) and isinstance(page.get("text"), str)}
+        page_text = {
+            page["page"]: normalize(page["text"])
+            for page in pages
+            if isinstance(page, dict) and isinstance(page.get("text"), str)
+        }
         for item in citations_in(mock):
             page = item.get("page")
             quote = item.get("quote")
-            if item.get("document_id") != document.get("document_id") or not isinstance(page, int) or not isinstance(quote, str):
+            if (
+                item.get("document_id") != document.get("document_id")
+                or not isinstance(page, int)
+                or not isinstance(quote, str)
+            ):
                 errors.append(f"{prefix}: citation has invalid document_id, page, or quote")
             elif normalize(quote) not in page_text.get(page, ""):
                 errors.append(f"{prefix}: citation quote is not verbatim on page {page}")

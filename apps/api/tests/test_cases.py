@@ -419,6 +419,32 @@ def test_reviewers_are_exempt_from_visitor_quota(client: TestClient) -> None:
         assert res.status_code == 200
 
 
+def test_visitor_quota_not_consumed_on_409(client: TestClient) -> None:
+    client.post("/session")
+    case = _create(client, "fx01_clear")
+    case_id = case["case_id"]
+
+    service = client.app.state.case_service  # type: ignore[attr-defined]
+    factory = client.app.state.db_sessions  # type: ignore[attr-defined]
+    with factory() as db:
+        visitor_session_id = db.execute(
+            text("SELECT session_id FROM cases WHERE id = :id"), {"id": case_id}
+        ).scalar_one()
+
+    # Pre-mark case as processing so subsequent process attempt hits 409
+    with factory() as db:
+        db.execute(text("UPDATE cases SET status = 'processing' WHERE id = :id"), {"id": case_id})
+        db.commit()
+
+    # Attempt to process already processing case
+    res_409 = client.post(f"/cases/{case_id}/process")
+    assert res_409.status_code == 409
+    assert "already processing" in res_409.json()["detail"].lower()
+
+    # Quota should NOT have been counted for the 409 failure
+    assert len(service._visitor_processings.get(visitor_session_id, [])) == 0
+
+
 # --- Reviewer preview & localization ---
 
 
@@ -526,4 +552,64 @@ def test_patient_view_spanish_preserves_untranslated_clinical_instructions(
     assert "echocardiogram" in follow_up_es
     assert "[en]" in follow_up_es
     assert view_es["follow_up"][0]["timeframe"] == "en 2 semanas"
+
+
+def test_patient_view_spanish_expanded_glossary(client: TestClient) -> None:
+    _login(client)
+    case = _process(client, "fx01_clear")
+    fields = dict(case["revision"]["extracted_fields"])
+    fields["warning_signs"] = [
+        {"text": "Fainting", "evidence_state": "missing", "citations": []},
+        {"text": "Swelling of the face", "evidence_state": "missing", "citations": []},
+        {"text": "Drainage with a bad smell", "evidence_state": "missing", "citations": []},
+    ]
+    fields["activity"] = {
+        "text": "Keep the dressing clean and dry.",
+        "evidence_state": "missing",
+        "citations": [],
+    }
+    fields["diet"] = {
+        "text": "Resume usual meals as tolerated.",
+        "evidence_state": "missing",
+        "citations": [],
+    }
+    fields["follow_up"] = [
+        {
+            "instruction": "Arrange follow-up",
+            "timeframe": "within 14 days",
+            "evidence_state": "missing",
+            "citations": [],
+        }
+    ]
+    patch_res = client.patch(
+        f"/cases/{case['case_id']}/draft",
+        json={
+            "revision_id": case["revision"]["revision_id"],
+            "content_hash": case["revision"]["content_hash"],
+            "extracted_fields": fields,
+            "patient_draft": {
+                "summary": (
+                    "Follow wound-care instructions, use the listed medicines, "
+                    "and attend follow-up."
+                )
+            },
+        },
+    )
+    assert patch_res.status_code == 200
+    updated_case = patch_res.json()
+    _review(client, updated_case)
+
+    view_es = client.get(f"/cases/{case['case_id']}/patient-view?lang=es").json()
+    # Verify no unwanted [en] markers on translated terms
+    assert view_es["warning_signs"] == [
+        "Desmayos o pérdida del conocimiento",
+        "Hinchazón de la cara",
+        "Secreción o drenaje con mal olor",
+    ]
+    assert view_es["activity"] == "Mantenga el vendaje limpio y seco."
+    assert view_es["diet"] == "Reanude sus comidas habituales según tolere."
+    assert view_es["follow_up"][0]["instruction"] == "Coordine una cita de seguimiento"
+    assert view_es["follow_up"][0]["timeframe"] == "dentro de 14 días"
+    assert "Siga las instrucciones para el cuidado de heridas" in view_es["summary"]
+
 
