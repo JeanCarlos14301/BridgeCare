@@ -26,7 +26,7 @@ Status: accepted (2026-10-15). Compared with DeepSeek-V4-Flash on the same fixtu
 
 ## ADR-007: Evolus integration out of scope
 
-Status: accepted. The Evolus partner track requires its own vLLM endpoint on AMD Developer Cloud and at least two Evolus building blocks. With the shared Token Factory endpoint and the time available, the team kept the core slice and left only a disabled stub.
+Status: accepted. The Evolus partner track requires its own vLLM endpoint on AMD Developer Cloud and at least two Evolus building blocks. With the shared Token Factory endpoint and the time available, the team kept the core slice. An early disabled stub was removed because it was never used.
 
 ## ADR-008: Deterministic glossary for the Spanish patient sheet
 
