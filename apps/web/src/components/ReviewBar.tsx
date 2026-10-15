@@ -68,6 +68,11 @@ export function ReviewBar(props: {
               </div>
             </dl>
             {currentReview.resolution_note && <p className="decision-note">“{currentReview.resolution_note}”</p>}
+            <p className="decision-next muted">
+              {currentReview.decision === "approve"
+                ? "The patient sheet is unlocked for this exact revision. Running again creates a new revision that locks it until a reviewer approves it."
+                : "This draft will never reach the patient. Next step: use Run again for a new AI draft, or return the document to the discharging team to correct it at the source."}
+            </p>
           </div>
         </div>
       ) : props.role === "reviewer" ? (
@@ -107,6 +112,9 @@ export function ReviewBar(props: {
             </button>
           </div>
           {!gate.approvable && <p className="muted fine-print">Blocked by the safety gate.</p>}
+          <p className="muted fine-print">
+            Approve sends this AI draft to the patient sheet. Reject keeps it away from the patient.
+          </p>
           <p className="muted fine-print" title="Approval applies only to this exact revision and content.">
             Binds to revision <code>{shortHash(props.revision.revision_id, 8)}</code> · hash{" "}
             <code title={props.revision.content_hash}>{shortHash(props.revision.content_hash, 8)}</code>

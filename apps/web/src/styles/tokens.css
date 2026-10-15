@@ -41,6 +41,10 @@
   --neutral: #98a2b3;
   --neutral-text: #475467;
   --neutral-tint: #f2f4f7;
+  /* AI-generated content (drafts, model output). */
+  --ai: #4f46e5;
+  --ai-text: #4338ca;
+  --ai-tint: #eef0ff;
 
   /* type */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -109,6 +113,10 @@
   --neutral: #6b7585;
   --neutral-text: #a7b0bd;
   --neutral-tint: #222831;
+  /* AI-generated content (drafts, model output). */
+  --ai: #8b93f5;
+  --ai-text: #aeb4ff;
+  --ai-tint: #23253d;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-lift: 0 6px 16px rgb(0 0 0 / 35%);
   --shadow-dialog: 0 24px 48px rgb(0 0 0 / 50%);

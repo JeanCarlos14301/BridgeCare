@@ -180,11 +180,9 @@ def main() -> int:
     folders = sorted(path for path in FIXTURES.iterdir() if path.is_dir()) if FIXTURES.exists() else []
     ids = {folder.name for folder in folders}
     missing = REQUIRED_IDS - ids
-    extra = ids - REQUIRED_IDS
     for fixture_id in sorted(missing):
         errors.append(f"fixtures/discharge: missing required fixture {fixture_id}")
-    for fixture_id in sorted(extra):
-        errors.append(f"fixtures/discharge: unexpected fixture {fixture_id}")
+    # Additional fixtures are allowed (the plan expands to 12); every folder gets the same checks.
     for folder in folders:
         check_fixture(folder, errors)
     if errors:

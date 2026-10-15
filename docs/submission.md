@@ -32,7 +32,7 @@ Draft texts for the submission form, the video, and the deck. Every number here 
 
 **Additional information** (paste into the form; fill the password there only):
 
-> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–20 seconds on AMD). To approve and print the patient sheet, log in as reviewer with password `TODO-in-form-only`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; use the language switch on the patient sheet to see the Spanish version with untranslated phrases flagged. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
+> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–20 seconds on AMD). To approve and print the patient sheet, log in as reviewer with password `TODO-in-form-only`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; fx07 is an emergency department discharge for a cough: approve it and use the language switch on the patient sheet to see the Spanish version, with any untranslated phrase flagged EN. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
 
 **Cover image:** 16:9. TODO (Edgar): product screenshot of the review view with the fx04 conflict and the gate, plus the BridgeCare name. No patient photos, no AMD or Evolus logos unless the rules allow them.
 

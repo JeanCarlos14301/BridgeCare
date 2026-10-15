@@ -156,6 +156,7 @@ Shared limits apply to the whole team: about **20 requests per minute**, a small
 | `fx04` contradictory dose | Gate requires a resolution note before approval |
 | `fx05` prompt injection | The injected instruction is in the source but never in the output |
 | `fx06` provider failure | Mock only: the case ends `failed` with `provider_error` |
+| `fx07` emergency department discharge (cough) | Three medicines including an inhaler (2 puffs), return precautions; try the Spanish patient sheet |
 
 Also try opening a case from an incognito window (another session gets 404) and opening the patient sheet before approving (409).
 
