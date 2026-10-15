@@ -32,7 +32,11 @@ Draft texts for the submission form, the video, and the deck. Every number here 
 
 **Additional information** (paste into the form; fill the password there only):
 
-> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–20 seconds on AMD). To approve and print the patient sheet, log in as reviewer with password `TODO-in-form-only`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; fx07 is an emergency department discharge for a cough: approve it and use the language switch on the patient sheet to see the Spanish version, with any untranslated phrase flagged EN. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
+> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–40 seconds on AMD, depending on load). To approve and print the patient sheet, log in as reviewer with password `TODO-in-form-only`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; fx07 is an emergency department discharge for a cough: approve it and use the language switch on the patient sheet to see the Spanish version, with any untranslated phrase flagged EN. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
+
+**Video link:** TODO (YouTube or similar, under 5 minutes).
+
+**Pitch deck:** TODO (PDF link or upload).
 
 **Cover image:** 16:9. TODO (Edgar): product screenshot of the review view with the fx04 conflict and the gate, plus the BridgeCare name. No patient photos, no AMD or Evolus logos unless the rules allow them.
 
@@ -41,10 +45,10 @@ Draft texts for the submission form, the video, and the deck. Every number here 
 | Time | Block | What is shown and said |
 | --- | --- | --- |
 | 0:00–0:20 | The problem | A dense discharge document. "A nurse has minutes to turn this into instructions a patient can follow. One miscopied dose is a medication error." |
-| 0:20–1:05 | Clear case (fx01) | Process on the live URL; source on the left, fields with citations on the right; click a citation to highlight the exact quote; approve; open and print the patient sheet; switch it to Spanish. |
+| 0:20–1:05 | Emergency discharge (fx07) | Process on the live URL; the Original document on the left, the AI draft on the right; click a citation to highlight the exact quote; preview, approve, print the patient sheet and switch it to Spanish. |
 | 1:05–1:55 | It knows when to stop (fx04) | Two different doses in the same document; the gate shows `conflicting_field`; approve is blocked; the patient sheet answers 409; the reviewer writes a resolution note and only then approves. Mention that an altered dose or a quote that is not in the document blocks the same way. |
 | 1:55–2:20 | Powered by AMD | The provider pill with model, latency, request ID and the AMD Token Factory host; the Token Factory usage page (key hidden). |
-| 2:20–2:45 | What we measured | 142/144 medication fields over three runs, conflict blocked 15/15 times, 0/6 injection leaks, about 15–20 s per case. TODO: manual versus assisted review time once measured; otherwise say it is the next validation step. |
+| 2:20–2:45 | What we measured | 142/144 medication fields over three runs, outcome and gate as expected 15/15, the conflict blocked in every run, 0/6 injection leaks, about 15–20 s per case in the evaluation. TODO: manual versus assisted review time once measured; otherwise say it is the next validation step. |
 | 2:45–3:00 | Who it is for | Discharge coordination in clinics and emergency departments: faster, safer last step of a visit, in the patient's language. Next step: validation with clinical staff. |
 
 Rules for the recording: use the live URL with real inference, never the mock; hide the API key and the reviewer password; label the video as a recording.
