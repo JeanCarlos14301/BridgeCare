@@ -1,6 +1,6 @@
 # AMD inference runbook
 
-No AMD execution is claimed until it has been run and recorded.
+Real inference on AMD Token Factory runs in the public demo and in the recorded evaluation (`eval/README.md`, `docs/deploy.md` deployment record).
 
 ## Primary path: AMD Token Factory (shared endpoints)
 

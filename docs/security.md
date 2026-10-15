@@ -12,8 +12,8 @@
 - Reviewer login compares the password in constant time, issues a new token on success (no session fixation), and is disabled when `REVIEWER_PASSWORD` is empty. After 10 failed attempts in 5 minutes, all logins return 429 until the window passes; this cap is process-wide because the API is a single replica.
 - Every case endpoint must call `ensure_case_owner`. A case from another session answers 404, so a UUID never grants access or reveals existence.
 - Cookie authentication relies on `SameSite=Strict` and explicit CORS origins against cross-site requests; no separate CSRF token is used.
-- Document content will be treated as untrusted data in Phase B and can never modify prompts, tools, or approval gates.
+- Document content is untrusted data: pages are wrapped in random per-request boundaries, the output schema rejects unknown keys, and instructions inside a document can never modify prompts, tools, or approval gates (fixture fx05 and the evaluation check this).
 - The model never sets approval state.
 
-This scaffold is not a production security review. Authentication, authorization, upload validation, retention, encryption, audit records, and clinical governance remain Phase B work.
+This is a hackathon prototype, not a production security review. Sessions, reviewer authentication, per-case authorization and a hashed approval record exist; upload validation, data retention policies, encryption at rest, full audit logging, and clinical governance are not implemented.
 
