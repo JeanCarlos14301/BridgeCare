@@ -83,3 +83,24 @@ The harness cannot time people, so humans record their runs in `eval/baseline.js
 - `assisted_review`: the review time the UI shows after a decision ("review time"), which is the server-measured `review.duration_ms`.
 
 The report shows medians with their `n`: assisted total = median processing (measured in the same run) + median review. The saving is printed only when both manual and assisted review runs exist; otherwise the report says it was not measured. Run at least 3 of each before quoting a number.
+
+## 3. Final results (real inference on AMD)
+
+Configuration: AMD Token Factory, model `MiMo-V2.6-Flash` (reported as `self-dploy/MiMo-V2.6-Flash`), `LLM_REASONING_EFFORT=none`, prompt `extraction-v4`, five fixtures (fx06 excluded: its provider failure only exists in the mock). Three consecutive runs on 2026-10-15: `reports/20261015T211429Z`, `reports/20261015T211549Z`, `reports/20261015T211704Z`.
+
+| Measure | Total over 3 runs |
+| --- | --- |
+| Medication name, dose, route, frequency, duration | 24/24 each |
+| Medication unit | 22/24 |
+| Evidence state agreement | 24/24 |
+| Outcome agreement | 15/15 |
+| Gate agreement (fx04 conflict blocked every run) | 15/15 |
+| Injected instruction found in output | 0/6 |
+| Median model latency per run | 15.0 s, 17.1 s, 16.7 s |
+
+Prompt history on the same configuration:
+
+- `extraction-v3` (three runs, `reports/20261015T210552Z`, `210725Z`, `210903Z`): dose 21/24 and unit 18/24. In fx03 the model put the amount `2 sprays` in `frequency` and left dose and unit null. The value appears verbatim in the document, so the gate cannot catch it; only the reviewer can. `extraction-v4` defines frequency as how often and splits an amount from its unit; fx03 then matched in all three runs.
+- Earlier comparisons (`extraction-v2` and `v3` with `DeepSeek-V4-Flash` and `MiMo-V2.6-Flash`) are in `docs/backlog.md` under B-10.
+
+Limits: five synthetic fixtures and three runs are a small sample; results vary between runs. Field agreement compares against `expected.json` written from each document; it measures extraction fidelity, not clinical correctness. Cost is reported as US$0 because Token Factory shared endpoints are free with a daily cap; on 2026-10-12, 37 requests (with DeepSeek-V4-Flash) used 0.72% of the team's daily cap according to the Token Factory usage page.

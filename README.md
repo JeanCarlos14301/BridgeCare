@@ -105,8 +105,11 @@ In `.env`:
 LLM_PROVIDER=openai_compatible
 LLM_BASE_URL=https://developer.amd.com.cn/radeon/api
 LLM_API_KEY=<team key>
-LLM_MODEL=DeepSeek-V4-Flash
+LLM_MODEL=MiMo-V2.6-Flash
+LLM_REASONING_EFFORT=none
 ```
+
+This is the evaluated configuration (prompt `extraction-v4`). `MiMo-V2.6-Flash` thinks by default; `LLM_REASONING_EFFORT=none` turns that off so the output budget goes to the JSON.
 
 Check the connection (the script reads the `LLM_*` variables from your shell environment), then restart:
 
@@ -117,7 +120,7 @@ docker compose up -d --build
 
 `/api/ready` must report `provider_mode: openai_compatible` and that the model is listed. Missing values stop startup; the app never falls back to mock silently.
 
-Shared limits apply to the whole team: about **20 requests per minute**, a small daily spend cap, and a daily reset at 03:00 UTC (22:00 in Colombia). Each processed case is one request and takes about 20–30 seconds. Announce evaluation runs in the team chat. Only synthetic documents may be sent: the Token Factory terms forbid sensitive personal or health data. Details: `infra/amd/README.md`.
+Shared limits apply to the whole team: about **20 requests per minute**, a small daily spend cap, and a daily reset at 03:00 UTC (22:00 in Colombia). Each processed case is one request and takes about 15–20 seconds. Announce evaluation runs in the team chat. Only synthetic documents may be sent: the Token Factory terms forbid sensitive personal or health data. Details: `infra/amd/README.md`.
 
 ## Daily development workflow
 
@@ -231,6 +234,21 @@ The native API reads exported variables and an optional `apps/api/.env`, **not**
 - `docs`: domain spec, backlog, deployment, security, team, and pre-existing work.
 
 See `AGENTS.md` for ownership and safety rules, `docs/domain-spec.md` for the full contract, and `docs/backlog.md` for current status.
+
+## Results (real inference on AMD)
+
+Three consecutive runs on 2026-10-15 with AMD Token Factory (`MiMo-V2.6-Flash`, prompt `extraction-v4`) over five synthetic fixtures:
+
+| Measure | Total over 3 runs |
+| --- | --- |
+| Medication fields matching the document (name, dose, unit, route, frequency, duration) | 142/144 |
+| Evidence states matching | 24/24 |
+| Contradictory dose (fx04) blocked until a resolution note | 3/3 runs |
+| Outcome and gate as expected | 15/15 |
+| Injected instruction repeated in the output | 0/6 |
+| Median model latency per run | 15.0–17.1 s |
+
+Method, prompt history and limits: `eval/README.md`. Raw reports: `eval/reports/`. This is a small synthetic sample and measures extraction fidelity, not clinical correctness.
 
 ## Status and limits
 
