@@ -38,7 +38,7 @@ Draft texts for the submission form, the video, and the deck. Every number here 
 
 **Pitch deck:** TODO (PDF link or upload).
 
-**Cover image:** 16:9. TODO (Edgar): product screenshot of the review view with the fx04 conflict and the gate, plus the BridgeCare name. No patient photos, no AMD or Evolus logos unless the rules allow them.
+**Cover image:** 16:9. TODO (Edgar): product screenshot of the review view with the fx04 conflict and the gate, plus the BridgeCare name. No patient photos, no sponsor logos unless the rules allow them.
 
 ## Video script (3 minutes, under the 5-minute limit)
 

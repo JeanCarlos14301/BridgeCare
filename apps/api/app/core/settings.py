@@ -31,9 +31,6 @@ class Settings(BaseSettings):
     # Empty means: search parent folders for fixtures/discharge (repository checkout).
     fixtures_dir: str = ""
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
-    evolus_enabled: bool = False
-    evolus_api_key: SecretStr = SecretStr("")
-    evolus_application_id: str = ""
     reviewer_password: SecretStr = SecretStr("")
     session_secret: SecretStr = SecretStr("")
 

@@ -28,7 +28,6 @@ Facts from the Token Factory guide that the code depends on:
 - Limits are **per team key**: about 30 requests per minute, 8 concurrent, plus a daily spend cap (`GET /v1/usage`). A 429 with a short `Retry-After` is retried once; a per-minute limit fails fast with a clear error. Coordinate experiments across the team.
 - The catalog changes; pick models from `GET /v1/models` at the time of use.
 - Terms: trial and development only, no SLA; prompts and outputs are retained for about 2 days; **do not send sensitive personal, health, or financial data**. BridgeCare sends only synthetic fixtures. Uploads stay disabled.
-- Dedicated endpoints (paid with credits) and Evolus's "own vLLM endpoint on AMD Developer Cloud" requirement are separate; the shared endpoint does not satisfy the Evolus track.
 
 Evidence for the submission: the model id returned in each revision (`revision.model`), the `X-Request-ID` and latency shown in the UI, and the `GET /v1/usage?include_recent=true` record of those requests. Never show the key.
 

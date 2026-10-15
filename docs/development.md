@@ -122,7 +122,6 @@ The API applies pending SQL files from `apps/api/app/db/migrations/` at startup 
 | `REVIEWER_PASSWORD` | empty | Reviewer login (12+ characters); empty disables login |
 | `SESSION_SECRET` | empty | HMAC key for session tokens (32+ characters); rotating it ends all sessions |
 | `PUBLIC_HOST` | empty | Hostname for the Caddy deployment only |
-| `EVOLUS_*` | disabled | Reserved; no Evolus integration is implemented |
 
 ## 8. Troubleshooting
 
