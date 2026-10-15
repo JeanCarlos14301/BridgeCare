@@ -2,7 +2,7 @@
 
 The vertical slice runs end to end with the mock provider (fixture -> extraction -> validation -> review -> printable view). Each section below is a reviewable issue with acceptance criteria.
 
-## Status (2026-10-13)
+## Status (2026-10-15)
 
 | Item | Status | Owner |
 | --- | --- | --- |
@@ -15,12 +15,12 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-06 Domain API | Done except `POST /cases/upload` | Daniel |
 | B-07 Review UI | First version; gaps in B-12 | Edgar |
 | B-08 Safety tests | Done for the backend (72 tests) | Daniel |
-| B-09 Evaluation report | Harness reports provider, latency medians and time from `eval/baseline.json`; real-provider report and manual baseline runs pending | Felipe |
-| B-10 Real inference on AMD Token Factory | First real eval on 6 fixtures, prompt `extraction-v2` (`eval/reports/20261013T211552Z`, `20261013T212005Z`): `MiMo-V2.6-Flash` 52/54 medication fields, 0 failures, median model 15.7 s; `DeepSeek-V4-Flash` 45/48, fx04 `schema_invalid` once (4 later runs valid), median 19.9 s. Prompt `extraction-v3` with `MiMo-V2.6-Flash`, two runs (`20261013T212515Z`, `20261013T212648Z`): 103/108 medication fields, 15/18 evidence states, 0 failures, fx04 blocked both times, median model 16.7 s and 14.8 s | Felipe |
+| B-09 Evaluation report | Real-provider results recorded (`eval/README.md` section 3); manual baseline time pending (`eval/baseline.json` is empty) | Felipe |
+| B-10 Real inference on AMD Token Factory | First real eval on 6 fixtures, prompt `extraction-v2` (`eval/reports/20261013T211552Z`, `20261013T212005Z`): `MiMo-V2.6-Flash` 52/54 medication fields, 0 failures, median model 15.7 s; `DeepSeek-V4-Flash` 45/48, fx04 `schema_invalid` once (4 later runs valid), median 19.9 s. Prompt `extraction-v3` with `MiMo-V2.6-Flash`, two runs (`20261013T212515Z`, `20261013T212648Z`): 103/108 medication fields, 15/18 evidence states, 0 failures, fx04 blocked both times, median model 16.7 s and 14.8 s. Final: `extraction-v4` + `MiMo-V2.6-Flash` (`LLM_REASONING_EFFORT=none`), three runs on 2026-10-15: 142/144 medication fields, 24/24 evidence states, 15/15 outcomes and gates, 0/6 injection leaks | Felipe |
 | B-11 Review time measurement | Backend done (`review.duration_ms`); UI shows review time | Daniel |
-| B-12 UI completion | Items 1, 2, 3, 4, 5, 6 done; 7 (draft editing) and the Spanish toggle pending | Edgar |
+| B-12 UI completion | Items 1-6 and the Spanish toggle with reviewer preview done; 7 (draft editing) not built | Edgar |
 | B-13 Public HTTPS deployment | Done: Azure VM live with real AMD inference (15/15 checks); Cloudflare tunnel as backup | Jean |
-| B-14 Demo video, slides and submission | Not started | Edgar and Jean |
+| B-14 Demo video, slides and submission | Submission texts drafted in `docs/submission.md`; video, slides and cover image pending | Edgar and Jean |
 
 Mock evaluation results only prove that the pieces fit together, because the mock replays each fixture's recorded response. Never present them as model accuracy.
 

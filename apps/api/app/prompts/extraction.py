@@ -9,7 +9,10 @@ from app.schemas.domain import SourceDocument
 # v3: v2 asked for the "shortest" frequency phrase, so both models dropped "with food", MiMo
 # rewrote "in each nostril" as "nasal", and a medication with no stated frequency or duration was
 # marked "supported" (eval/reports/20261013T211552Z, 20261013T212005Z).
-PROMPT_VERSION = "extraction-v3"
+# v4: in three final v3 runs MiMo put "2 sprays" (amount and unit) in "frequency" and left dose
+# and unit null for "2 sprays in each nostril for 4 days" (fx03). Frequency is now defined as
+# how often, and an amount followed by its unit is split into dose and unit.
+PROMPT_VERSION = "extraction-v4"
 
 SYSTEM_PROMPT = """\
 You extract discharge instructions into JSON for a nurse to review. You do not diagnose, \
@@ -27,8 +30,11 @@ or "nasal spray" that are part of it.
    - "unit" is only the unit, e.g. "mg", "mL", "tablet". A product applied without an amount, \
 such as an ointment, has dose null and unit null.
    - "route" is copied exactly, e.g. "by mouth", "in each nostril". Never shorten or rename it.
-   - "frequency" is the complete exact phrase, including qualifiers such as "with food", \
-"as needed" or "at bedtime", e.g. "every 8 hours with food".
+   - An amount followed by its unit is always split: "2 sprays" is dose "2" and unit \
+"sprays"; "1 tablet" is dose "1" and unit "tablet".
+   - "frequency" is only how often, as the complete exact phrase including qualifiers such as \
+"with food", "as needed" or "at bedtime", e.g. "every 8 hours with food". An amount is never \
+a frequency. When the document does not say how often, frequency is null.
    - "duration" is the exact phrase for how long, e.g. "7 days".
 3. Every item has "evidence_state": "supported" (stated clearly), "missing" (not stated), \
 "ambiguous" (unclear), or "conflicting" (the document states different values). \

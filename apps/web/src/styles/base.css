@@ -141,6 +141,43 @@ kbd,
   color: var(--brand-text);
 }
 
+/* Provenance: what the care team wrote versus what the model drafted. */
+.pill-source {
+  border-color: color-mix(in srgb, var(--neutral) 45%, var(--border));
+  background: var(--neutral-tint);
+  color: var(--neutral-text);
+}
+
+.pill-ai {
+  border-color: color-mix(in srgb, var(--ai) 45%, var(--border));
+  background: var(--ai-tint);
+  color: var(--ai-text);
+}
+
+.ai-explainer {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--ai);
+  border-radius: var(--radius-md);
+  background: var(--ai-tint);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.ai-explainer strong {
+  color: var(--ai-text);
+}
+
+.decision-next {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
 .pill-role {
   border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
   background: var(--brand-tint);

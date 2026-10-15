@@ -20,6 +20,7 @@ ROUTE_MAP_ES: dict[str, str] = {
     "subcutaneous": "subcutánea",
     "subcutaneously": "subcutáneamente",
     "inhalation": "inhalatoria",
+    "by inhalation": "por inhalación",
     "rectal": "rectal",
     "intramuscular": "intramuscular",
     "im": "intramuscular",
@@ -46,6 +47,11 @@ FREQUENCY_MAP_ES: dict[str, str] = {
     "every 8 hours as needed": "cada 8 horas según sea necesario",
     "every 8 hours as needed for pain": "cada 8 horas según sea necesario para el dolor",
     "every 8 hours with food": "cada 8 horas con alimentos",
+    "every 8 hours with food as needed": "cada 8 horas con alimentos según sea necesario",
+    "every 4 hours as needed for wheezing": (
+        "cada 4 horas según sea necesario para las sibilancias"
+    ),
+    "three times a day as needed for cough": "tres veces al día según sea necesario para la tos",
     "every 12 hours": "cada 12 horas",
     "every 24 hours": "cada 24 horas",
     "at bedtime": "al acostarse",
@@ -78,6 +84,12 @@ INSTRUCTION_MAP_ES: dict[str, str] = {
     "follow up with your doctor": (
         "Consulte a su médico para seguimiento"
     ),
+    "see your primary care clinician if the cough is not improving": (
+        "Consulte a su médico de atención primaria si la tos no mejora"
+    ),
+    "see your primary care clinician if the cough is not improving.": (
+        "Consulte a su médico de atención primaria si la tos no mejora."
+    ),
     "follow-up appointment": (
         "Cita de seguimiento"
     ),
@@ -101,6 +113,8 @@ WARNING_SIGNS_MAP_ES: dict[str, str] = {
     "swelling of the face": "Hinchazón de la cara",
     "spreading redness": "Enrojecimiento que se extiende",
     "drainage with a bad smell": "Secreción o drenaje con mal olor",
+    "coughing up blood": "Tos con sangre",
+    "fever above 39 c": "Fiebre mayor de 39 °C",
 }
 
 ACTIVITY_MAP_ES: dict[str, str] = {
@@ -112,6 +126,8 @@ ACTIVITY_MAP_ES: dict[str, str] = {
     "resume normal activity as tolerated": "Reanude su actividad normal según tolere",
     "keep the dressing clean and dry": "Mantenga el vendaje limpio y seco",
     "keep the dressing clean and dry.": "Mantenga el vendaje limpio y seco.",
+    "rest and avoid smoke exposure": "Descanse y evite la exposición al humo",
+    "rest and avoid smoke exposure.": "Descanse y evite la exposición al humo.",
 }
 
 DIET_MAP_ES: dict[str, str] = {
