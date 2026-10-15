@@ -162,6 +162,29 @@
   font-weight: 650;
 }
 
+/* A phrase the API could not translate: shown in English with a small labelled tag. */
+.untranslated {
+  display: inline-block;
+  margin-left: .35em;
+  padding: 0 .3em;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: .6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  vertical-align: .1em;
+  cursor: help;
+}
+
+.sheet-legend {
+  margin-top: var(--space-6);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
 .sheet-notice {
   display: flex;
   align-items: flex-start;

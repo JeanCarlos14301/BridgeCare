@@ -287,6 +287,19 @@ Gates: lint 0, typecheck 0, tests 0 (40/40), build 0, no line > 120.
 - No truncated labels and no horizontal scroll at the widths above; "Go to field", approval, and the
   patient sheet still work. Gates: lint 0, typecheck 0, tests 0 (40/40), no line > 120.
 
+### Check against main after #17
+
+`main` has nothing new since this branch's base (`3b1afff`). PR #17 changed no frontend file and no
+contract: visitor processings are now counted only after a successful run, and the Spanish glossary
+grew. With the mock fixtures fx01 to fx05 the Spanish preview now has no untranslated phrase (0 "[en]"
+markers, checked through the API). The live model can still produce phrases the glossary does not
+know, which the API keeps in English with a trailing " [en]".
+
+- The patient sheet now shows such a phrase without the raw marker, marked `lang="en"`, followed by
+  an "EN" tag with the tooltip "Not translated; shown in English", and adds a one-line legend in
+  Spanish at the foot of the sheet (also printed). No value is changed.
+- Gates: lint 0, typecheck 0, tests 0 (41/41), no line > 120.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of
