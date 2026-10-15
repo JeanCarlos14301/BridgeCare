@@ -1,46 +1,64 @@
-/* Review workspace: source viewer, fields pane, review rail. */
+/* Review workspace layout.
+
+   Desktop (>= 1024 px):
+     +--------------------------------+------------------------+
+     | source   (3fr, about 60%)      | fields   (2fr, ~40%)   |  top row: each pane scrolls
+     +--------------------------------+------------------------+
+     | review:  gate  |  decision  |  patient sheet            |  full width, cards side by side
+     +---------------------------------------------------------+
+   The top row fills the window, so the review row sits below it and is reached by scrolling the
+   workspace.
+
+   Narrow (< 1024 px): one column in reading order: source, fields, review. */
 
 .inspector {
+  --top-row: max(26rem, calc(100vh - var(--toolbar-height) - var(--stepper-height)));
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "source"
+    "fields"
+    "review";
+  align-content: start;
   height: 100%;
   min-height: 0;
 }
 
-/* `hidden` must win over the panes' own display values (inactive tab on small screens). */
-.inspector-pane[hidden] {
-  display: none;
+.pane-source {
+  grid-area: source;
 }
 
-.pane-fields,
-.pane-review {
+.pane-fields {
+  grid-area: fields;
   min-width: 0;
-  min-height: 0;
 }
 
 .pane-review {
+  grid-area: review;
   display: grid;
-  align-content: start;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-6);
+  border-top: 1px solid var(--border);
   background: var(--bg);
 }
 
-/* Wide desktop: three full-height columns, each with its own scroll. */
-@media (min-width: 1440px) {
+@media (min-width: 1024px) {
   .inspector {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) var(--rail-width);
-  }
-
-  .source-panel,
-  .pane-fields,
-  .pane-review {
-    height: 100%;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-rows: var(--top-row) auto;
+    grid-template-areas:
+      "source fields"
+      "review review";
     overflow-y: auto;
   }
 
   .source-panel {
     display: flex;
     flex-direction: column;
+    min-height: 0;
     overflow: hidden;
   }
 
@@ -51,53 +69,16 @@
   }
 
   .pane-fields {
-    border-right: 1px solid var(--border);
-  }
-}
-
-/* Smaller desktop: the source stays pinned on the left; fields and review stack on the right and
-   scroll together. */
-@media (min-width: 1024px) and (max-width: 1439.98px) {
-  .inspector {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas: "source fields" "source review";
-    grid-template-rows: auto 1fr;
-    align-items: start;
-    overflow-y: auto;
-  }
-
-  .source-panel {
-    grid-area: source;
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - var(--toolbar-height) - var(--stepper-height));
-  }
-
-  .pane-fields {
-    grid-area: fields;
-    min-height: auto;
-  }
-
-  .pane-review {
-    grid-area: review;
-    min-height: auto;
-    border-top: 1px solid var(--border);
-  }
-
-  .pane-fields .fields-panel {
-    min-height: auto;
-  }
-
-  .source-panel .window-body {
-    flex: 1;
     min-height: 0;
     overflow-y: auto;
   }
+
+  /* Gate | Decision | Patient sheet; wraps to two columns when the content area is narrower. */
+  .pane-review {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  }
 }
 
-/* Below 1024 px the panes are tabs (see CitationInspector). */
 @media (max-width: 1023.98px) {
   .inspector {
     height: auto;
@@ -117,35 +98,8 @@
 
   .pane-review {
     padding: 0;
+    border-top: 0;
   }
-}
-
-.inspector-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-3);
-}
-
-.segment {
-  min-height: 2.25rem;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.segment[aria-selected="true"] {
-  background: var(--surface-1);
-  color: var(--text);
-  box-shadow: var(--shadow-card);
 }
 
 /* Source viewer */

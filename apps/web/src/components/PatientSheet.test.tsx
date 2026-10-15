@@ -88,4 +88,28 @@ describe("patient sheet", () => {
     expect(button("Open patient sheet")).not.toBeNull();
     sheet.root.unmount();
   });
+
+  it("shows an untranslated phrase with an EN tag instead of the raw marker", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ ...view("es"), warning_signs: ["Dolor en el pecho", "Fainting [en]"] }), {
+            status: 200,
+          }),
+        ),
+      ),
+    );
+    const sheet = render(<PatientSheet caseId="case-1" role="reviewer" approved />);
+    await act(async () => button("Open patient sheet")?.click());
+
+    const printable = document.querySelector(".printable");
+    expect(printable?.textContent).not.toContain("[en]");
+    const tag = printable?.querySelector("abbr.untranslated");
+    expect(tag?.textContent).toBe("EN");
+    expect(tag?.previousElementSibling?.getAttribute("lang")).toBe("en");
+    expect(tag?.previousElementSibling?.textContent).toBe("Fainting");
+    expect(printable?.querySelector(".sheet-legend")).not.toBeNull();
+    sheet.root.unmount();
+  });
 });

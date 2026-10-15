@@ -97,6 +97,7 @@ export function Pipeline(props: { caseView: CaseView | null; processing: boolean
           <li
             key={step.id}
             className={`pipeline-step step-${step.state}`}
+            title={props.variant === "strip" ? `${step.label}: ${step.detail}` : undefined}
             style={{ "--i": index } as CSSProperties}
           >
             <span className="step-icon">

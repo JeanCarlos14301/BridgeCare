@@ -160,7 +160,12 @@ export function FieldsPanel(props: {
   return (
     <section className="card fields-panel" aria-labelledby="fields-title">
       <header className="fields-head">
-        <h2 id="fields-title">Extracted fields</h2>
+        <h2
+          id="fields-title"
+          title="Select a field or a p. N chip to see its quote. Press [ and ] to move between citations."
+        >
+          Extracted fields
+        </h2>
         <div className="filter" role="group" aria-label="Show fields">
           <button
             type="button"
@@ -181,7 +186,7 @@ export function FieldsPanel(props: {
         </div>
       </header>
       <ul className="state-summary" aria-label="Fields by evidence state">
-        {EVIDENCE_STATES.map((state) => (
+        {EVIDENCE_STATES.filter((state) => counts[state] > 0).map((state) => (
           <li key={state} className={`state-count state-count-${state}`} title={EVIDENCE[state].label}>
             <Icon name={EVIDENCE[state].icon} size={12} />
             {EVIDENCE[state].label} {counts[state]}
@@ -230,7 +235,6 @@ export function FieldsPanel(props: {
                 </dl>
                 <Notes notes={card.notes} />
                 <div className="field-footer">
-                  <span className="field-footer-label">Evidence</span>
                   <CitationChips {...card} />
                 </div>
               </article>
@@ -294,10 +298,6 @@ export function FieldsPanel(props: {
         </ul>
       </Section>
 
-      <p className="fields-tip muted">
-        Select a field or a <span className="kbd-chip">p. N</span> chip to see its quote. Press <kbd>[</kbd> and{" "}
-        <kbd>]</kbd> to move between several citations.
-      </p>
     </section>
   );
 }

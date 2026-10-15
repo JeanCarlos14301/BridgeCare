@@ -209,13 +209,13 @@
 
 .step-text {
   display: grid;
-  min-width: 0;
   line-height: 1.25;
 }
 
 .step-label {
   font-size: var(--text-xs);
   font-weight: 650;
+  white-space: nowrap;
 }
 
 .step-detail {
@@ -226,15 +226,16 @@
   white-space: nowrap;
 }
 
-.pipeline-strip .step-idle .step-detail {
-  color: var(--text-muted);
+/* The strip shows labels only; each step's detail is in its tooltip. */
+.pipeline-strip .step-detail {
+  display: none;
 }
 
 /* Connector between steps in the strip */
 .pipeline-strip .pipeline-step:not(:last-child)::after {
   content: "";
-  flex: 1 1 auto;
-  min-width: var(--space-3);
+  flex: 1 1 0;
+  min-width: var(--space-2);
   height: 1px;
   margin: 0 var(--space-3) 0 var(--space-1);
   background: var(--border-strong);
@@ -244,6 +245,9 @@
   background: var(--success);
 }
 
+/* The label never shrinks; only the detail is cut, with an ellipsis, when a step is narrow.
+   The detail clips its overflow, so as a grid item its minimum width is zero and the step's
+   minimum width is the label's. */
 .pipeline-strip .step-text {
   flex: 0 1 auto;
 }

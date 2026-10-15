@@ -19,6 +19,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     revision: "Revision",
     medications: "Medications",
     none: "No medications listed.",
+    untranslated: "",
     followUp: "Follow-up",
     warnings: "Warning signs",
     activity: "Activity",
@@ -36,6 +37,7 @@ const LABELS: Record<Language, Record<string, string>> = {
     revision: "Revisión",
     medications: "Medicamentos",
     none: "No hay medicamentos indicados.",
+    untranslated: "EN: texto que no se tradujo y se muestra en inglés.",
     followUp: "Seguimiento",
     warnings: "Señales de alarma",
     activity: "Actividad",
@@ -48,6 +50,39 @@ const LABELS: Record<Language, Record<string, string>> = {
     duration: "Duración",
   },
 };
+
+// The API keeps any phrase it could not translate in English and appends this marker, rather than
+// dropping clinical detail. The sheet shows the phrase with a labelled tag instead of the raw marker.
+const UNTRANSLATED = / \[en\]$/;
+
+function isUntranslated(value: string | null | undefined): boolean {
+  return value != null && UNTRANSLATED.test(value);
+}
+
+function Localized({ value, fallback = null }: { value: string | null | undefined; fallback?: ReactNode }) {
+  if (value == null) return <>{fallback}</>;
+  if (!isUntranslated(value)) return <>{value}</>;
+  return (
+    <>
+      <span lang="en">{value.replace(UNTRANSLATED, "")}</span>
+      <abbr className="untranslated" title="Not translated; shown in English">
+        EN
+      </abbr>
+    </>
+  );
+}
+
+function hasUntranslated(view: PatientView): boolean {
+  const values = [
+    view.summary,
+    view.activity,
+    view.diet,
+    ...view.warning_signs,
+    ...view.follow_up.flatMap((item) => [item.instruction, item.timeframe]),
+    ...view.medications.flatMap((row) => [row.route, row.frequency, row.duration]),
+  ];
+  return values.some(isUntranslated);
+}
 
 const MEDICATION_COLUMNS = ["name", "dose", "unit", "route", "frequency", "duration"] as const;
 
@@ -85,7 +120,11 @@ function Sheet({ view, mode }: { view: PatientView; mode: Mode }) {
           </p>
         )}
       </header>
-      {view.summary && <p className="sheet-summary">{view.summary}</p>}
+      {view.summary && (
+        <p className="sheet-summary">
+          <Localized value={view.summary} />
+        </p>
+      )}
 
       <SheetSection icon="pill" title={text.medications}>
         {view.medications.length ? (
@@ -104,7 +143,7 @@ function Sheet({ view, mode }: { view: PatientView; mode: Mode }) {
                 <tr key={index}>
                   {MEDICATION_COLUMNS.map((key) => (
                     <td key={key} data-label={text[key]}>
-                      {medication[key] ?? "—"}
+                      <Localized value={medication[key]} fallback="—" />
                     </td>
                   ))}
                 </tr>
@@ -121,8 +160,13 @@ function Sheet({ view, mode }: { view: PatientView; mode: Mode }) {
           <ul>
             {view.follow_up.map((item, index) => (
               <li key={index}>
-                {item.instruction}
-                {item.timeframe ? ` (${item.timeframe})` : ""}
+                <Localized value={item.instruction} />
+                {item.timeframe && (
+                  <>
+                    {" ("}
+                    <Localized value={item.timeframe} />)
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -132,21 +176,28 @@ function Sheet({ view, mode }: { view: PatientView; mode: Mode }) {
         <SheetSection icon="alert" title={text.warnings}>
           <ul>
             {view.warning_signs.map((sign, index) => (
-              <li key={index}>{sign}</li>
+              <li key={index}>
+                <Localized value={sign} />
+              </li>
             ))}
           </ul>
         </SheetSection>
       )}
       {view.activity && (
         <SheetSection icon="pulse" title={text.activity}>
-          <p>{view.activity}</p>
+          <p>
+            <Localized value={view.activity} />
+          </p>
         </SheetSection>
       )}
       {view.diet && (
         <SheetSection icon="utensils" title={text.diet}>
-          <p>{view.diet}</p>
+          <p>
+            <Localized value={view.diet} />
+          </p>
         </SheetSection>
       )}
+      {text.untranslated && hasUntranslated(view) && <p className="sheet-legend">{text.untranslated}</p>}
       <p className="sheet-notice">
         <Icon name="info" size={14} />
         {view.notice}
@@ -217,8 +268,8 @@ export function PatientSheet({
           <h2 id="patient-title">Patient sheet</h2>
           <p className="muted">
             {approved
-              ? "Unlocked: this revision has a valid approval. Available in English and Spanish."
-              : "Locked until a reviewer approves the current revision."}
+              ? "Approved. English and Spanish."
+              : "Locked until approval."}
           </p>
         </div>
       </div>

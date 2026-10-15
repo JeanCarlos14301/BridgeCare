@@ -14,7 +14,7 @@ function gateSummary(gate: Gate, approved: boolean): { tone: Tone; icon: IconNam
       tone: "ok",
       icon: "shieldCheck",
       title: "No blocking reasons",
-      detail: "Every automated check passed. A reviewer still makes the decision.",
+      detail: "",
     };
   }
   if (gate.approvable) {
@@ -22,16 +22,14 @@ function gateSummary(gate: Gate, approved: boolean): { tone: Tone; icon: IconNam
       tone: "warn",
       icon: "shieldAlert",
       title: `Resolution note required (${reasons})`,
-      detail: approved
-        ? "Resolved in the reviewer's note when this revision was approved."
-        : "A reviewer resolution note is required to approve.",
+      detail: approved ? "Resolved in the reviewer's note at approval." : "",
     };
   }
   return {
     tone: "blocked",
     icon: "shieldAlert",
     title: `Approval blocked (${reasons})`,
-    detail: "This revision cannot be approved until the reasons below are fixed.",
+    detail: "Fix the reasons below in a new revision.",
   };
 }
 
@@ -56,7 +54,7 @@ export function GatePanel(props: {
           <h2 id="gate-title" className="gate-title">
             {summary.title}
           </h2>
-          <p className="muted gate-detail">{summary.detail}</p>
+          {summary.detail && <p className="muted gate-detail">{summary.detail}</p>}
         </div>
       </div>
 
@@ -69,8 +67,9 @@ export function GatePanel(props: {
               <li key={`${reason.code}-${reason.field ?? ""}-${index}`}>
                 <div className="reason-main">
                   <span className="reason-message">{reason.message}</span>
-                  <code className="code-chip">{reason.code}</code>
-                  {reason.field && <span className="gate-field">{reason.field}</span>}
+                  <code className="code-chip" title={reason.field ?? undefined}>
+                    {reason.code}
+                  </code>
                 </div>
                 {fieldKey && props.onGoToField && (
                   <button

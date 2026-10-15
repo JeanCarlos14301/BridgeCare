@@ -1,4 +1,4 @@
-import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Revision, SourceDocument } from "../api";
 import { attentionKeys, listFields } from "../lib/caseStats";
@@ -7,12 +7,6 @@ import { GatePanel } from "./GatePanel";
 import { chipId, type SelectField, type Selection } from "./selection";
 import { SourcePanel } from "./SourcePanel";
 
-type Tab = "source" | "fields" | "review";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "source", label: "Source" },
-  { id: "fields", label: "Fields" },
-  { id: "review", label: "Review" },
-];
 const WIDE_QUERY = "(min-width: 1024px)";
 
 function isTypingTarget(target: EventTarget | null) {
@@ -44,9 +38,9 @@ function fieldCard(fieldKey: string) {
 }
 
 /**
- * Review workspace: source pages, extracted fields, and a review rail (overview, gate, decision,
- * patient sheet) side by side on desktop, or three tabs below 1024 px. Fields, chips, gate reasons,
- * and the citation map all link both ways.
+ * Review workspace. On desktop the source document and the extracted fields share the top row and
+ * the review panel (gate, decision, patient sheet) runs full width below; below 1024 px everything
+ * stacks in that order. Fields, chips, gate reasons, and the citation map all link both ways.
  */
 export function CitationInspector(props: {
   documents: SourceDocument[];
@@ -56,7 +50,6 @@ export function CitationInspector(props: {
   after?: ReactNode;
 }) {
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [tab, setTab] = useState<Tab>("fields");
   const [flashKey, setFlashKey] = useState<string | null>(null);
   const flashTimer = useRef<number | undefined>(undefined);
   const wide = useIsWide();
@@ -72,7 +65,6 @@ export function CitationInspector(props: {
 
   const select: SelectField = (fieldKey, citations, index, state) => {
     setSelection((current) => ({ fieldKey, citations, index, state, nonce: (current?.nonce ?? 0) + 1 }));
-    setTab("source");
   };
 
   /** Bring a field card into view and flash it, without leaving the pane the reviewer is in. */
@@ -107,7 +99,6 @@ export function CitationInspector(props: {
   // From the gate: select the field's first quote and move to the field itself.
   const goToField = (fieldKey: string) => {
     selectQuietly(fieldKey, 0);
-    setTab("fields");
     showField(fieldKey, true);
   };
 
@@ -128,62 +119,22 @@ export function CitationInspector(props: {
         const index = (current.index + step + current.citations.length) % current.citations.length;
         return { ...current, index, nonce: current.nonce + 1 };
       });
-      setTab("source");
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
   const backToField = () => {
-    setTab("fields");
     if (selection) {
       const chip = chipId(selection.fieldKey, selection.index);
       window.requestAnimationFrame(() => document.getElementById(chip)?.focus());
     }
   };
 
-  const onTabKey = (event: ReactKeyboardEvent) => {
-    const position = TABS.findIndex((item) => item.id === tab);
-    const keys: Record<string, Tab> = {
-      ArrowLeft: TABS[(position + TABS.length - 1) % TABS.length].id,
-      ArrowRight: TABS[(position + 1) % TABS.length].id,
-      Home: TABS[0].id,
-      End: TABS[TABS.length - 1].id,
-    };
-    const next = keys[event.key];
-    if (!next) return;
-    event.preventDefault();
-    setTab(next);
-    document.getElementById(`tab-${next}`)?.focus();
-  };
-
-  // Tab semantics only exist while the tabs are shown; on wide screens both panes are regions.
-  const paneProps = (id: Tab) =>
-    wide ? {} : { role: "tabpanel", "aria-labelledby": `tab-${id}`, hidden: tab !== id };
   const labelOf = (fieldKey: string) => fields.find((field) => field.key === fieldKey)?.label ?? null;
 
   return (
     <div className="inspector">
-      {!wide && (
-        <div className="inspector-tabs" role="tablist" aria-label="Workspace view">
-          {TABS.map((item) => (
-            <button
-              key={item.id}
-              id={`tab-${item.id}`}
-              type="button"
-              role="tab"
-              className="segment"
-              aria-selected={tab === item.id}
-              aria-controls={`pane-${item.id}`}
-              tabIndex={tab === item.id ? 0 : -1}
-              onClick={() => setTab(item.id)}
-              onKeyDown={onTabKey}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
       <SourcePanel
         id="pane-source"
         className="inspector-pane pane-source"
@@ -192,9 +143,8 @@ export function CitationInspector(props: {
         fields={fields}
         onBack={backToField}
         onPickTrace={pickTrace}
-        {...paneProps("source")}
       />
-      <div id="pane-fields" className="inspector-pane pane-fields" {...paneProps("fields")}>
+      <div id="pane-fields" className="inspector-pane pane-fields">
         <FieldsPanel
           revision={props.revision}
           selection={selection}
@@ -205,18 +155,18 @@ export function CitationInspector(props: {
           onSelect={select}
         />
       </div>
-      <div id="pane-review" className="inspector-pane pane-review" {...paneProps("review")}>
-        <div className="card review-card">
+      <section id="pane-review" className="inspector-pane pane-review" aria-label="Review and decision">
+        <div className="card review-card gate-card">
           <GatePanel
             gate={props.revision.gate}
             approved={props.approved}
             fieldLabel={labelOf}
             onGoToField={goToField}
           />
-          {props.decision}
         </div>
+        <div className="card review-card decision-card">{props.decision}</div>
         {props.after}
-      </div>
+      </section>
     </div>
   );
 }

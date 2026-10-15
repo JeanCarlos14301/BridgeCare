@@ -167,15 +167,13 @@ describe("citation inspector", () => {
     const view = render(<CitationInspector documents={documents} revision={makeRevision(conflicting)} />);
     const chip = view.node.querySelector('button[aria-label="Show quote on page 2"]');
     click(chip);
-    expect(view.node.querySelector("#pane-source")?.hasAttribute("hidden")).toBe(false);
-    expect(view.node.querySelector("#pane-fields")?.hasAttribute("hidden")).toBe(true);
+    expect(document.activeElement).toBe(marks(view.node)[0]);
 
     act(() => {
       marks(view.node)[0].dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
     await act(() => new Promise((resolve) => window.requestAnimationFrame(resolve)));
 
-    expect(view.node.querySelector("#pane-fields")?.hasAttribute("hidden")).toBe(false);
     expect(document.activeElement).toBe(chip);
     view.root.unmount();
   });
