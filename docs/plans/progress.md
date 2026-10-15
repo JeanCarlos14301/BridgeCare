@@ -254,6 +254,25 @@ already been processed in the session.
 
 Gates: lint 0, typecheck 0, tests 0 (40/40 in 9 files), build 0, no line > 120.
 
+## Review layout: two-column top row, full-width review row
+
+Branch: `feat/review-layout` from `main` at `3b1afff` (after #16 and #17). Layout and presentation
+only; selection, citations, gate links, shortcuts, API calls, and buttons are unchanged.
+
+- Desktop (>= 1024 px), CSS Grid on `.inspector`: top row `source` (3fr, about 60%) and `fields`
+  (2fr, about 40%), each with its own scroll; a full-width `review` row below with the gate,
+  decision, and patient sheet as separate cards (`repeat(auto-fit, minmax(min(100%, 19rem), 1fr))`:
+  three side by side from 1280 px, two from 1024 px). The workspace scrolls to reach the review row.
+- Below 1024 px: one column, source, fields, review. The three tabs were removed for this.
+- Stepper labels no longer shrink; only the detail gets an ellipsis. The medication value grid uses
+  two columns when the fields column is under 400 px so FREQUENCY is never cut.
+- Measured in headless Edge (dark theme, mock) at 1920, 1440, 1280, 1100, 1024, 900 and 375 px: no
+  truncated badge, value label, stepper label, filter, chip, or button; no source text overflow; no
+  horizontal scroll. Source/fields widths at 1440 px: 697/464 px. "Go to field" from the review row
+  scrolls up to the field, focuses it, and highlights its quote; approval and the patient sheet work.
+
+Gates: lint 0, typecheck 0, tests 0 (40/40), build 0, no line > 120.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of

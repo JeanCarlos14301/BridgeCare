@@ -323,6 +323,13 @@
   }
 }
 
+/* A narrow fields column: two columns so labels such as FREQUENCY are never cut. */
+@container (max-width: 399.98px) {
+  .spec-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .field-notes {
   display: grid;
   gap: var(--space-1);
@@ -437,18 +444,22 @@
 
 /* Gate */
 
-/* One card holds the gate and the decision; its top edge carries the gate tone. */
+/* Cards of the review row. The gate card's top edge carries the gate tone. */
 .review-card {
   display: grid;
   gap: var(--space-4);
+  min-width: 0;
+}
+
+.gate-card {
   border-top: 3px solid var(--success);
 }
 
-.review-card:has(.gate-warn) {
+.gate-card:has(.gate-warn) {
   border-top-color: var(--warning);
 }
 
-.review-card:has(.gate-blocked) {
+.gate-card:has(.gate-blocked) {
   border-top-color: var(--danger);
 }
 
@@ -457,8 +468,7 @@
 }
 
 .review-bar {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
+  min-width: 0;
 }
 
 .gate {
