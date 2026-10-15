@@ -74,7 +74,7 @@ export function ReviewBar(props: {
         <>
           <label className="field-label" htmlFor="resolution-note">
             Resolution note
-            {gate.requires_resolution_note && <span className="required"> (required, 10+ characters)</span>}
+            {gate.requires_resolution_note && <span className="required"> (required)</span>}
           </label>
           <textarea
             id="resolution-note"
@@ -84,9 +84,7 @@ export function ReviewBar(props: {
             onChange={(event) => props.onNoteChange(event.target.value)}
           />
           <p id="note-count" className={`note-count${noteReady ? " is-ready" : ""}`}>
-            {gate.requires_resolution_note
-              ? `${noteLength} of ${NOTE_MINIMUM} characters minimum`
-              : `${noteLength} characters (optional)`}
+            {gate.requires_resolution_note ? `${noteLength}/${NOTE_MINIMUM} characters` : "Optional"}
           </p>
           <div className="button-row decision-actions">
             <button
@@ -108,10 +106,10 @@ export function ReviewBar(props: {
               Approve revision {props.revision.number}
             </button>
           </div>
-          {!gate.approvable && <p className="muted fine-print">Approval stays disabled while the gate blocks it.</p>}
-          <p className="muted fine-print">
-            Approval binds to revision <code>{shortHash(props.revision.revision_id, 8)}</code> and content hash{" "}
-            <code title={props.revision.content_hash}>{shortHash(props.revision.content_hash)}</code>.
+          {!gate.approvable && <p className="muted fine-print">Blocked by the safety gate.</p>}
+          <p className="muted fine-print" title="Approval applies only to this exact revision and content.">
+            Binds to revision <code>{shortHash(props.revision.revision_id, 8)}</code> · hash{" "}
+            <code title={props.revision.content_hash}>{shortHash(props.revision.content_hash, 8)}</code>
           </p>
         </>
       ) : (

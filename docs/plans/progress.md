@@ -273,6 +273,20 @@ only; selection, citations, gate links, shortcuts, API calls, and buttons are un
 
 Gates: lint 0, typecheck 0, tests 0 (40/40), build 0, no line > 120.
 
+### Less text, review row below the fold
+
+- The top row now fills the window (`--top-row: max(26rem, 100vh - toolbar - stepper)`); the review
+  row starts below it and is reached by scrolling. Measured at 1100, 1280, 1440 (900 px tall) and
+  1920 (1080 px tall): the review row's top edge is at the window's bottom edge.
+- Text trimmed (presentation only): stepper shows labels only, with each detail in a tooltip; the
+  source status line appears only once a citation is selected (it stays an aria-live region); zero
+  evidence counts are hidden; the fields tip moved to the heading tooltip; the "Evidence" label is
+  gone; gate sentences that repeated the title were removed and the field path moved to the code
+  chip tooltip; shorter note label, counter ("0/10 characters"), binding line, and patient sheet
+  status; the prompt version moved into the revision tooltip.
+- No truncated labels and no horizontal scroll at the widths above; "Go to field", approval, and the
+  patient sheet still work. Gates: lint 0, typecheck 0, tests 0 (40/40), no line > 120.
+
 ## Questions for the humans (section 8)
 
 - Fonts: vendor the Geist woff2 (OFL, with its licence file) into `apps/web/src/assets/` instead of

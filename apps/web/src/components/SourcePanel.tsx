@@ -162,7 +162,7 @@ export function SourcePanel({
         </div>
       </div>
       <p
-        className={`inspector-status${selection && !located ? " is-missing" : ""}`}
+        className={selection ? `inspector-status${located ? "" : " is-missing"}` : "sr-only"}
         aria-live="polite"
         data-testid="inspector-status"
       >

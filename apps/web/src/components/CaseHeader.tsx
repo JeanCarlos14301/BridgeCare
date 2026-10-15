@@ -42,13 +42,9 @@ export function CaseHeader({
       </div>
       {revision && (
         <dl className="case-meta">
-          <div>
+          <div title={`Prompt ${revision.prompt_version}`}>
             <dt>Revision</dt>
             <dd>{revision.number}</dd>
-          </div>
-          <div>
-            <dt>Prompt</dt>
-            <dd>{revision.prompt_version}</dd>
           </div>
           <div>
             <dt>Processing</dt>

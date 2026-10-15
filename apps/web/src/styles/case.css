@@ -226,8 +226,9 @@
   white-space: nowrap;
 }
 
-.pipeline-strip .step-idle .step-detail {
-  color: var(--text-muted);
+/* The strip shows labels only; each step's detail is in its tooltip. */
+.pipeline-strip .step-detail {
+  display: none;
 }
 
 /* Connector between steps in the strip */

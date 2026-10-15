@@ -130,12 +130,6 @@
   font-weight: 600;
 }
 
-.fields-tip {
-  margin-top: var(--space-6);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-  font-size: var(--text-xs);
-}
 
 .section-title {
   display: flex;
@@ -361,13 +355,6 @@
   gap: var(--space-2);
 }
 
-.field-footer-label {
-  color: var(--text-muted);
-  font-size: .6875rem;
-  font-weight: 600;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-}
 
 .compact-list,
 .uncertainties {
@@ -636,11 +623,6 @@
   min-width: 0;
 }
 
-.gate-field {
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
 
 .reason-go {
   justify-self: start;

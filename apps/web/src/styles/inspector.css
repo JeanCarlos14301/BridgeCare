@@ -6,13 +6,13 @@
      +--------------------------------+------------------------+
      | review:  gate  |  decision  |  patient sheet            |  full width, cards side by side
      +---------------------------------------------------------+
-   The workspace scrolls vertically to reach the review row; the top row leaves the start of the
-   review row on screen.
+   The top row fills the window, so the review row sits below it and is reached by scrolling the
+   workspace.
 
    Narrow (< 1024 px): one column in reading order: source, fields, review. */
 
 .inspector {
-  --top-row: clamp(26rem, calc(100vh - var(--toolbar-height) - var(--stepper-height) - 14rem), 64rem);
+  --top-row: max(26rem, calc(100vh - var(--toolbar-height) - var(--stepper-height)));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:

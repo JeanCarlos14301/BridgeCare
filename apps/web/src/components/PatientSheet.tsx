@@ -217,8 +217,8 @@ export function PatientSheet({
           <h2 id="patient-title">Patient sheet</h2>
           <p className="muted">
             {approved
-              ? "Unlocked: this revision has a valid approval. Available in English and Spanish."
-              : "Locked until a reviewer approves the current revision."}
+              ? "Approved. English and Spanish."
+              : "Locked until approval."}
           </p>
         </div>
       </div>
