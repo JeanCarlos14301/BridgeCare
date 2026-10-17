@@ -1,11 +1,11 @@
 # Team ownership
 
-| Owner | GitHub | Area | Current task |
+| Owner | GitHub | Area | Submission role |
 | --- | --- | --- | --- |
-| Jean | @JeanCarlos14301 | Infrastructure, CI, scripts, API core/database | B-13 public HTTPS deployment; Token Factory key; coordination |
-| Daniel | @alarconDaniel | Domain API, schemas, services, contracts | Review the domain backend you now own, then B-11 review time measurement |
-| Felipe | @IngeNelsonG | Providers, prompts, evaluation, fixtures | Review the fixtures and harness, then B-10 real inference and model choice |
-| Edgar | @Wissen01720 | Web application | Review the UI you now own, then B-12 UI completion; B-14 demo assets |
+| Jean | @JeanCarlos14301 | Infrastructure, CI, scripts, API core/database | Deployment, evaluation runs, coordination, submission |
+| Daniel | @alarconDaniel | Domain API, schemas, services, contracts | Review timing, visitor quota, Spanish glossary; demo video |
+| Felipe | @IngeNelsonG | Providers, prompts, evaluation, fixtures | Model comparison, prompt iterations, evaluation harness |
+| Edgard | @Wissen01720 | Web application | Review interface; pitch deck and cover image |
 
 Cross-area changes require review from the relevant owner. Handles were confirmed from the repository collaborator invitations; `.github/CODEOWNERS` uses the same handles.
 

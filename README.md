@@ -1,8 +1,15 @@
 # BridgeCare
 
-**An AI that knows when to stop.**
+![BridgeCare: an AI that knows when to stop](docs/media/bridgecare-cover.png)
 
-BridgeCare turns a hospital discharge document into a clear patient sheet, in English or Spanish. An open model running on **AMD GPUs** drafts the sheet; BridgeCare proves where every value came from, blocks the output when something does not match the document, and lets only a human reviewer approve it.
+**An AI that knows when to stop.** BridgeCare turns a hospital discharge document into a clear patient sheet, in English or Spanish. An open model running on **AMD GPUs** drafts the sheet; BridgeCare proves where every value came from, blocks the output when something does not match the document, and lets only a human reviewer approve it.
+
+<p>
+  <a href="https://bridgecare-team944.northcentralus.cloudapp.azure.com"><strong>Live demo</strong></a> ·
+  <a href="https://youtu.be/ncB2oi9ecQo"><strong>Video (4 min)</strong></a> ·
+  <a href="docs/media/bridgecare-pitch-deck.pdf"><strong>Pitch deck (PDF)</strong></a> ·
+  <a href="#results-real-inference-on-amd"><strong>Results</strong></a>
+</p>
 
 [![Live demo](https://img.shields.io/badge/live%20demo-online-2f7d32)](https://bridgecare-team944.northcentralus.cloudapp.azure.com)
 [![Inference](https://img.shields.io/badge/inference-AMD%20Token%20Factory-ed1c24)](infra/amd/README.md)
@@ -10,6 +17,13 @@ BridgeCare turns a hospital discharge document into a clear patient sheet, in En
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 > BridgeCare does **not** diagnose, recommend treatment, calculate doses, or approve its own output. Every document in this repository and in the demo is synthetic.
+
+## Judge's tour (3 minutes)
+
+1. Open the [live demo](https://bridgecare-team944.northcentralus.cloudapp.azure.com) and log in as reviewer (password in the submission form).
+2. Pick **fx04 · Conflicting medication dose** and process it. The gate stops approval: the document states two different doses. Open the patient sheet: it stays locked. Write a resolution note and approve; the sheet unlocks for that exact revision.
+3. Pick **fx07 · Emergency department discharge** and process it. Click a `p. N` chip to see the exact quote behind a value, preview the Spanish sheet, approve and print.
+4. Check the provider pill at the bottom left: AMD Token Factory, model, latency and request ID of the call you just made.
 
 ---
 
@@ -111,7 +125,7 @@ To use real AMD inference, set the four `LLM_*` values shown in `.env.example`. 
 
 ## Team
 
-Built during the AMD Developer Hackathon ACT III (October 12–18, 2026) by Jean ([@JeanCarlos14301](https://github.com/JeanCarlos14301)), Daniel ([@alarconDaniel](https://github.com/alarconDaniel)), Felipe ([@IngeNelsonG](https://github.com/IngeNelsonG)) and Edgar ([@Wissen01720](https://github.com/Wissen01720)). Work done before the event is recorded in [`docs/preexisting-work.md`](docs/preexisting-work.md). Parts of the code were drafted with coding agents and reviewed by the owner of each area.
+Built during the AMD Developer Hackathon ACT III (October 12–18, 2026) by Jean ([@JeanCarlos14301](https://github.com/JeanCarlos14301)), Daniel ([@alarconDaniel](https://github.com/alarconDaniel)), Felipe ([@IngeNelsonG](https://github.com/IngeNelsonG)) and Edgard ([@Wissen01720](https://github.com/Wissen01720)). Work done before the event is recorded in [`docs/preexisting-work.md`](docs/preexisting-work.md). Parts of the code were drafted with coding agents and reviewed by the owner of each area.
 
 ## License
 

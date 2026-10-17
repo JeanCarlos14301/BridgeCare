@@ -2,7 +2,7 @@
 
 The vertical slice runs end to end with the mock provider (fixture -> extraction -> validation -> review -> printable view). Each section below is a reviewable issue with acceptance criteria.
 
-## Status (2026-10-15)
+## Status (2026-10-17)
 
 | Item | Status | Owner |
 | --- | --- | --- |
@@ -13,14 +13,14 @@ The vertical slice runs end to end with the mock provider (fixture -> extraction
 | B-04 Review and transactional approval | Done; owner review pending | Daniel |
 | B-05 Sessions and reviewer access | Done (upload endpoint not built) | Jean |
 | B-06 Domain API | Done except `POST /cases/upload` | Daniel |
-| B-07 Review UI | First version; gaps in B-12 | Edgar |
+| B-07 Review UI | First version; gaps in B-12 | Edgard |
 | B-08 Safety tests | Done for the backend (72 tests) | Daniel |
 | B-09 Evaluation report | Real-provider results recorded (`eval/README.md` section 3); manual baseline time pending (`eval/baseline.json` is empty) | Felipe |
 | B-10 Real inference on AMD Token Factory | First real eval on 6 fixtures, prompt `extraction-v2` (`eval/reports/20261013T211552Z`, `20261013T212005Z`): `MiMo-V2.6-Flash` 52/54 medication fields, 0 failures, median model 15.7 s; `DeepSeek-V4-Flash` 45/48, fx04 `schema_invalid` once (4 later runs valid), median 19.9 s. Prompt `extraction-v3` with `MiMo-V2.6-Flash`, two runs (`20261013T212515Z`, `20261013T212648Z`): 103/108 medication fields, 15/18 evidence states, 0 failures, fx04 blocked both times, median model 16.7 s and 14.8 s. Final: `extraction-v4` + `MiMo-V2.6-Flash` (`LLM_REASONING_EFFORT=none`), three runs on 2026-10-15: 142/144 medication fields, 24/24 evidence states, 15/15 outcomes and gates, 0/6 injection leaks | Felipe |
 | B-11 Review time measurement | Backend done (`review.duration_ms`); UI shows review time | Daniel |
-| B-12 UI completion | Items 1-6 and the Spanish toggle with reviewer preview done; 7 (draft editing) not built | Edgar |
+| B-12 UI completion | Items 1-6 and the Spanish toggle with reviewer preview done; 7 (draft editing) not built | Edgard |
 | B-13 Public HTTPS deployment | Done: Azure VM live with real AMD inference (15/15 checks); Cloudflare tunnel as backup | Jean |
-| B-14 Demo video, slides and submission | Submission texts drafted in `docs/submission.md`; video, slides and cover image pending | Edgar and Jean |
+| B-14 Demo video, slides and submission | Done: video, pitch deck and cover image (`docs/media/`); form texts in `docs/submission.md` | Daniel, Edgard and Jean |
 
 Mock evaluation results only prove that the pieces fit together, because the mock replays each fixture's recorded response. Never present them as model accuracy.
 
@@ -34,7 +34,7 @@ Owner: Daniel. The plan requires manual versus assisted time **including review*
 
 ## B-12: UI completion
 
-Owner: Edgar. Gaps found in the first UI version:
+Owner: Edgard. Gaps found in the first UI version:
 
 1. Show the MOCK badge at all times when `provider_mode` is mock (read `/health`), not only after processing.
 2. The printable patient view must include follow-up, warning signs, activity, diet, and the notice, not only summary and medications.
@@ -55,7 +55,7 @@ Owner: Jean. No AMD credits or paid hosting are needed: inference runs on Token 
 
 ## B-14: Demo video, slides and submission
 
-Owners: Edgar and Jean. Follow the plan's 3-minute script; the blocked contradictory case gets the most time. Use a recorded real AMD run, never the mock, for "Powered by AMD". Find one health professional for 15 minutes of feedback (no name or quote without permission).
+Owners: Edgard and Jean. Follow the plan's 3-minute script; the blocked contradictory case gets the most time. Use a recorded real AMD run, never the mock, for "Powered by AMD". Find one health professional for 15 minutes of feedback (no name or quote without permission).
 
 ## B-00: Apply migrations and verify SQLite persistence
 
