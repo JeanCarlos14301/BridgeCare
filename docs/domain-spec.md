@@ -196,6 +196,6 @@ All paths are under the API root (the browser uses `/api/...`). Session endpoint
 | --- | --- | --- |
 | Backend domain, validation, mock domain provider, API, contract | Daniel and Felipe | `apps/api/**`, `packages/contracts/**` |
 | Fixtures, evaluation harness | Felipe | `fixtures/discharge/**`, `eval/**` |
-| Review UI and printable patient view | Edgar | `apps/web/**` |
+| Review UI and printable patient view | Edgard | `apps/web/**` |
 
 Owners review every PR touching their paths, including PRs prepared with coding agents.

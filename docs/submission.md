@@ -1,6 +1,6 @@
 # Submission package (lablab.ai, AMD Developer Hackathon ACT III)
 
-Draft texts for the submission form, the video, and the deck. Every number here comes from `eval/README.md` section 3. Replace each `TODO` before submitting, and never put the reviewer password in this repository.
+Final texts and assets for the lablab.ai submission form. Every number comes from `eval/README.md` section 3. The reviewer password goes only into the form, never into this repository.
 
 ## Form fields
 
@@ -30,9 +30,15 @@ Draft texts for the submission form, the video, and the deck. Every number here 
 
 **Demo application URL:** https://bridgecare-team944.northcentralus.cloudapp.azure.com
 
+**Video:** https://youtu.be/ncB2oi9ecQo (4:05)
+
+**Pitch deck:** `docs/media/bridgecare-pitch-deck.pdf` (13 slides)
+
+**Cover image:** `docs/media/bridgecare-cover.png` (1920×1080, 16:9)
+
 **Additional information** 
 
-> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–40 seconds on AMD, depending on load). To approve and print the patient sheet, log in as reviewer with password `TODO-in-form-only`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; fx07 is an emergency department discharge for a cough: approve it and use the language switch on the patient sheet to see the Spanish version, with any untranslated phrase flagged EN. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
+> All documents are synthetic. Open the demo, pick any fixture and process it (about 15–40 seconds on AMD, depending on load). To approve and print the patient sheet, log in as reviewer with password `<reviewer password>`. Recommended path: fx04 shows a contradictory dose that blocks approval until a resolution note is written; fx05 contains a prompt-injection attempt that never reaches the output; fx07 is an emergency department discharge for a cough: approve it and use the language switch on the patient sheet to see the Spanish version, with any untranslated phrase flagged EN. Visitors are limited to a few processing runs to protect the shared AMD quota. Evaluation method and raw reports: `eval/README.md` and `eval/reports/`.
 
 
 
